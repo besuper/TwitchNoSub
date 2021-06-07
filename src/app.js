@@ -13,6 +13,12 @@ const domains = [
 ];
 
 setTimeout(() => {
+    let checkSubOnly = getElementByXpath('//p[contains(@data-test-selector, "content-overlay-gate__text")]');
+
+    if (checkSubOnly == undefined) {
+        return;
+    }
+
     const video = getElementByXpath('//div[contains(@class, "persistent-player")]');
     const className = video.className;
 
