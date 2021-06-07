@@ -12,7 +12,8 @@
         "activeTab",
         "tabs",
         "webRequest",
-        "webRequestBlocking"
+        "webRequestBlocking",
+        "https://www.twitch.tv/videos/*"
     ],
     "web_accessible_resources": [
         "src/scripts/sha1.js",

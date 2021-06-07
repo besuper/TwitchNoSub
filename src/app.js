@@ -56,6 +56,8 @@ $(window).on('load', function () {
                 let hash = sha1(baseString).substring(0, 20);
                 let finalString = hash + "_" + baseString;
 
+                const key = baseString;
+
                 domains.forEach(domain => {
                     let fullUrl = domain + "/" + finalString + "/chunked/index-dvr.m3u8";
 
@@ -63,9 +65,31 @@ $(window).on('load', function () {
 
                     check.then((data, statut) => {
                         if (statut === "success") {
-                            contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id=vid1 id="video" class="vjs-tech" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
+                            contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id="video" class="vjs-tech" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
 
-                            var player = videojs('vid1');
+                            document.getElementById('video').onloadedmetadata = () => {
+                                let time = window.localStorage.getItem(key + "_time");
+
+                                if (time != undefined) {
+                                    player.currentTime(time);
+                                }
+
+                                let volume = window.localStorage.getItem(key + "_volume");
+
+                                if (volume != undefined) {
+                                    player.volume(volume);
+                                }
+
+                                player.on('volumechange', () => {
+                                    window.localStorage.setItem(key + "_volume", player.volume());
+                                });
+
+                                player.on('timeupdate', () => {
+                                    window.localStorage.setItem(key + "_time", player.currentTime());
+                                });
+                            };
+
+                            var player = videojs('video');
                             player.play();
                         }
                     });
