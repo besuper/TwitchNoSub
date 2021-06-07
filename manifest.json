@@ -3,6 +3,11 @@
     "version": "0.1",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 2,
+    "icons": {
+        "16": "icons/icon.png",
+        "48": "icons/icon.png",
+        "128": "icons/icon.png"
+    },
     "permissions": [
         "activeTab",
         "tabs",
