@@ -17,8 +17,7 @@
     ],
     "web_accessible_resources": [
         "src/scripts/sha1.js",
-        "src/scripts/utils.js",
-        "assets/loading.gif"
+        "src/scripts/utils.js"
     ],
     "background": {},
     "browser_action": {},

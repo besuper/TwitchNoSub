@@ -89,7 +89,9 @@ $(window).on('load', function () {
                                 });
                             };
 
-                            var player = videojs('video');
+                            var player = videojs('video', {
+                                playbackRates: [0.5, 1, 1.25, 1.5, 2]
+                            });
                             player.play();
                         }
                     });
