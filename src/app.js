@@ -16,13 +16,14 @@ $(window).on('load', function () {
 
     setTimeout(() => {
 
-        let checkSub = getElementByXpath('//p[contains(@data-test-selector, "content-overlay-gate__text")]');
+        let checkSub = getElementByXpath('//div[contains(@data-a-target, "player-overlay-content-gate")]');
 
         if (checkSub != undefined) {
+
+            checkSub.innerHTML = '<img src="https://i.ibb.co/NTpWgM1/Rolling-1s-200px.gif" alt="Loading VOD">';
+
             const video = getElementByXpath('//div[contains(@class, "persistent-player")]');
             const className = video.className;
-
-            video.remove();
 
             const contentStream = getElementByXpath('//div[contains(@data-target, "persistent-player-content")]');
 
@@ -49,6 +50,7 @@ $(window).on('load', function () {
             });
 
             setTimeout(() => {
+                video.remove();
                 if (!retrieveVOD(vodId, streamerName, (timeStamp - 9), contentStream, className)) {
                     retrieveVOD(vodId, streamerName, (timeStamp - 10), contentStream, className);
                 }
