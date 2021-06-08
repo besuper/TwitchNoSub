@@ -16,18 +16,6 @@ function checkUrl(url) {
     });
 }
 
-function getMeta(doc, metaName) {
-    const metas = doc.getElementsByTagName('meta');
-
-    for (let i = 0; i < metas.length; i++) {
-        if (metas[i].getAttribute('name') === metaName) {
-            return metas[i].getAttribute('content');
-        }
-    }
-
-    return '';
-}
-
 function toTimestamp(strDate) {
     var datum = Date.parse(strDate);
     return datum / 1000;
