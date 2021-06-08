@@ -4,8 +4,6 @@
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 2,
     "icons": {
-        "16": "assets/icons/icon.png",
-        "48": "assets/icons/icon.png",
         "128": "assets/icons/icon.png"
     },
     "permissions": [
@@ -15,12 +13,6 @@
         "webRequestBlocking",
         "https://www.twitch.tv/videos/*"
     ],
-    "web_accessible_resources": [
-        "src/scripts/sha1.js",
-        "src/scripts/utils.js"
-    ],
-    "background": {},
-    "browser_action": {},
     "content_scripts": [
         {
             "run_at": "document_end",
@@ -36,7 +28,8 @@
                 "src/app.js"
             ],
             "css": [
-                "src/style/video-js.min.css"
+                "src/style/video-js.min.css",
+                "src/style/custom.css"
             ]
         }
     ]

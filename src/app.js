@@ -81,8 +81,7 @@ function retrieveVOD(vodId, streamerName, timeStamp, contentStream, className) {
         check.then((data, statut) => {
             if (statut === "success") {
                 found = true;
-
-                contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id="video" class="vjs-tech" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
+                contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id="video" class="vjs-tech vjs-matrix" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
 
                 document.getElementById('video').onloadedmetadata = () => {
                     let time = window.localStorage.getItem(key + "_time");

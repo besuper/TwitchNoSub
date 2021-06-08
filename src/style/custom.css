@@ -1,0 +1,12 @@
+.vjs-control-bar {
+    background-color: transparent !important;
+    font-size: 125%;
+}
+
+.vjs-control {
+    text-shadow: 2px 2px 5px black;
+}
+
+.vjs-play-progress {
+    background-color: #772ce8 !important;
+}
