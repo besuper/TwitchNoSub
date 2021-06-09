@@ -92,14 +92,14 @@ function retrieveVOD(vodId, streamerName, timeStamp, contentStream, className) {
                         player.currentTime(time);
                     }
 
-                    let volume = window.localStorage.getItem(key + "_volume");
+                    let volume = window.localStorage.getItem("volume");
 
                     if (volume != undefined) {
                         player.volume(volume);
                     }
 
                     player.on('volumechange', () => {
-                        window.localStorage.setItem(key + "_volume", player.volume());
+                        window.localStorage.setItem("volume", player.volume());
                     });
 
                     player.on('timeupdate', () => {
