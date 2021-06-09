@@ -25,6 +25,7 @@
                 "src/scripts/videojs-http-streaming.min.js",
                 "src/scripts/sha1.js",
                 "src/scripts/utils.js",
+                "src/scripts/chat.js",
                 "src/app.js"
             ],
             "css": [

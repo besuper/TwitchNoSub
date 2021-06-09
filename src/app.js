@@ -1,4 +1,5 @@
 const domains = [
+    "https://d1m7jfoe9zdc1j.cloudfront.net",
     "https://vod-secure.twitch.tv",
     "https://vod-metro.twitch.tv",
     "https://vod-pop-secure.twitch.tv",
@@ -8,8 +9,7 @@ const domains = [
     "https://d2nvs31859zcd8.cloudfront.net",
     "https://d2aba1wr3818hz.cloudfront.net",
     "https://d3c27h4odz752x.cloudfront.net",
-    "https://dgeft87wbj63p.cloudfront.net",
-    "https://d1m7jfoe9zdc1j.cloudfront.net",
+    "https://dgeft87wbj63p.cloudfront.net"
 ];
 
 $(window).on('load', function () {
@@ -111,6 +111,43 @@ function retrieveVOD(vodId, streamerName, timeStamp, contentStream, className) {
                     playbackRates: [0.5, 1, 1.25, 1.5, 2]
                 });
                 player.play();
+
+                setTimeout(() => {
+                    let index = 0;
+
+                    let messages = {
+                        "comments": []
+                    };
+
+                    fetchChat(player.currentTime(), undefined).done(data => {
+                        console.log("Received data");
+                        messages = $.parseJSON(data);
+                    });
+
+                    setInterval(() => {
+                        if (!player.paused() && messages != undefined && messages.comments.length > 0) {
+
+                            if (messages.comments.length == index) {
+                                console.log("Need refresh");
+
+                                fetchChat(player.currentTime(), messages._next).done(data => {
+                                    console.log("Received data next");
+                                    messages = $.parseJSON(data);
+
+                                    index = 0;
+                                });
+                            }
+
+                            messages.comments.forEach(comment => {
+                                if (comment.content_offset_seconds <= player.currentTime()) {
+                                    addMessage(comment);
+                                    delete messages.comments[index];
+                                    index++;
+                                }
+                            });
+                        }
+                    }, 1000);
+                }, 1200);
             }
         });
     }
