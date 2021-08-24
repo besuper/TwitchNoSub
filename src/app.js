@@ -1,17 +1,3 @@
-const domains = [
-    "https://d1m7jfoe9zdc1j.cloudfront.net",
-    "https://vod-secure.twitch.tv",
-    "https://vod-metro.twitch.tv",
-    "https://vod-pop-secure.twitch.tv",
-    "https://d2e2de1etea730.cloudfront.net",
-    "https://dqrpb9wgowsf5.cloudfront.net",
-    "https://ds0h3roq6wcgc.cloudfront.net",
-    "https://d2nvs31859zcd8.cloudfront.net",
-    "https://d2aba1wr3818hz.cloudfront.net",
-    "https://d3c27h4odz752x.cloudfront.net",
-    "https://dgeft87wbj63p.cloudfront.net"
-];
-
 $(window).on('load', function () {
 
     setTimeout(() => {
@@ -27,10 +13,6 @@ $(window).on('load', function () {
 
             const contentStream = getElementByXpath('//div[contains(@data-target, "persistent-player-content")]');
 
-            let vodId = "";
-            let streamerName = "";
-            let timeStamp = 0;
-
             $.ajax({
                 url: "https://api.twitch.tv/kraken/videos/" + window.location.toString().split("/").pop(),
                 headers: {
@@ -42,115 +24,108 @@ $(window).on('load', function () {
                 dataType: 'json',
                 success: function (data, statut) {
                     if (statut === "success") {
-                        vodId = data.broadcast_id;
-                        streamerName = data.channel.name;
-                        timeStamp = toTimestamp(data.created_at);
+                        const thumbUrl = data.preview.small;
+                        const splot = thumbUrl.split("//thumb/")[0].split("/");
+                        const finalString = splot[splot.length - 1];
+                        const domain = getDomain(data.animated_preview_url).trim();
+
+                        setTimeout(() => {
+                            video.remove();
+
+                            retrieveVOD(domain, finalString, contentStream, className);
+                        }, 1000);
                     }
                 }
             });
-
-            setTimeout(() => {
-                video.remove();
-                if (!retrieveVOD(vodId, streamerName, (timeStamp - 9), contentStream, className)) {
-                    retrieveVOD(vodId, streamerName, (timeStamp - 10), contentStream, className);
-                }
-            }, 2000);
         }
     }, 1500);
 })
 
-function retrieveVOD(vodId, streamerName, timeStamp, contentStream, className) {
+function getDomain(url) {
+    return url.replace("http://", "").replace("https://", "").split("/")[0];
+}
+
+function retrieveVOD(domain, finalString, contentStream, className) {
 
     let found = false;
 
-    let baseString = streamerName + "_" + vodId + "_" + timeStamp;
-    let hash = sha1(baseString).substring(0, 20);
-    let finalString = hash + "_" + baseString;
+    const key = finalString;
 
-    const key = baseString;
+    let fullUrl = "https://" + domain + "/" + finalString + "/chunked/index-dvr.m3u8";
 
-    for (domainIndex in domains) {
-        if (found) {
-            break;
-        }
+    let check = checkUrl(fullUrl);
 
-        let domain = domains[domainIndex];
+    check.then((data, statut) => {
+        if (statut === "success") {
+            found = true;
+            contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id="video" class="vjs-tech vjs-matrix" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
 
-        let fullUrl = domain + "/" + finalString + "/chunked/index-dvr.m3u8";
+            document.getElementById('video').onloadedmetadata = () => {
+                let time = window.localStorage.getItem(key + "_time");
 
-        let check = checkUrl(fullUrl);
+                if (time != undefined) {
+                    player.currentTime(time);
+                }
 
-        check.then((data, statut) => {
-            if (statut === "success") {
-                found = true;
-                contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id="video" class="vjs-tech vjs-matrix" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
+                let volume = window.localStorage.getItem("volume");
 
-                document.getElementById('video').onloadedmetadata = () => {
-                    let time = window.localStorage.getItem(key + "_time");
+                if (volume != undefined) {
+                    player.volume(volume);
+                }
 
-                    if (time != undefined) {
-                        player.currentTime(time);
-                    }
+                player.on('volumechange', () => {
+                    window.localStorage.setItem("volume", player.volume());
+                });
 
-                    let volume = window.localStorage.getItem("volume");
+                player.on('timeupdate', () => {
+                    window.localStorage.setItem(key + "_time", player.currentTime());
+                });
+            };
 
-                    if (volume != undefined) {
-                        player.volume(volume);
-                    }
+            var player = videojs('video', {
+                playbackRates: [0.5, 1, 1.25, 1.5, 2]
+            });
+            player.play();
 
-                    player.on('volumechange', () => {
-                        window.localStorage.setItem("volume", player.volume());
-                    });
+            setTimeout(() => {
+                let index = 0;
 
-                    player.on('timeupdate', () => {
-                        window.localStorage.setItem(key + "_time", player.currentTime());
-                    });
+                let messages = {
+                    "comments": []
                 };
 
-                var player = videojs('video', {
-                    playbackRates: [0.5, 1, 1.25, 1.5, 2]
+                fetchChat(player.currentTime(), undefined).done(data => {
+                    console.log("Received data");
+                    messages = $.parseJSON(data);
                 });
-                player.play();
 
-                setTimeout(() => {
-                    let index = 0;
+                setInterval(() => {
+                    if (!player.paused() && messages != undefined && messages.comments.length > 0) {
 
-                    let messages = {
-                        "comments": []
-                    };
+                        if (messages.comments.length == index) {
+                            console.log("Need refresh");
 
-                    fetchChat(player.currentTime(), undefined).done(data => {
-                        console.log("Received data");
-                        messages = $.parseJSON(data);
-                    });
+                            fetchChat(player.currentTime(), messages._next).done(data => {
+                                console.log("Received data next");
+                                messages = $.parseJSON(data);
 
-                    setInterval(() => {
-                        if (!player.paused() && messages != undefined && messages.comments.length > 0) {
-
-                            if (messages.comments.length == index) {
-                                console.log("Need refresh");
-
-                                fetchChat(player.currentTime(), messages._next).done(data => {
-                                    console.log("Received data next");
-                                    messages = $.parseJSON(data);
-
-                                    index = 0;
-                                });
-                            }
-
-                            messages.comments.forEach(comment => {
-                                if (comment.content_offset_seconds <= player.currentTime()) {
-                                    addMessage(comment);
-                                    delete messages.comments[index];
-                                    index++;
-                                }
+                                index = 0;
                             });
                         }
-                    }, 1000);
-                }, 1200);
-            }
-        });
-    }
+
+                        messages.comments.forEach(comment => {
+                            if (comment.content_offset_seconds <= player.currentTime()) {
+                                addMessage(comment);
+                                delete messages.comments[index];
+                                index++;
+                            }
+                        });
+                    }
+                }, 1000);
+            }, 1200);
+        }
+    });
+    //}
 
     return found;
 }
