@@ -17,22 +17,31 @@ $(window).on('load', function () {
                 url: "https://api.twitch.tv/kraken/videos/" + window.location.toString().split("/").pop(),
                 headers: {
                     "Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-                    "User-Agent": "Mozilla/5.0",
                     "Accept": "application/vnd.twitchtv.v5+json"
                 },
                 type: 'GET',
                 dataType: 'json',
                 success: function (data, statut) {
                     if (statut === "success") {
-                        const thumbUrl = data.preview.small;
-                        const splot = thumbUrl.split("//thumb/")[0].split("/");
-                        const finalString = splot[splot.length - 1];
-                        const domain = getDomain(data.animated_preview_url).trim();
+                        const animated_preview_url = data.animated_preview_url;
+                        const domain = animated_preview_url.split("/storyboards")[0].trim();
 
                         setTimeout(() => {
                             video.remove();
 
-                            retrieveVOD(domain, finalString, contentStream, className);
+                            const chanels = getElementsByXPath('//a[contains(@data-test-selector, "followed-channel")]');
+
+                            chanels.forEach(chanel => {
+                                chanel.onclick = on_click;
+                            });
+
+                            const vods = getElementsByXPath('//img[contains(@src, "vods/")]');
+                            vods.forEach(vod => {
+                                vod.onclick = on_click;
+                            });
+
+                            retrieveVOD(domain, contentStream, className);
+
                         }, 1000);
                     }
                 }
@@ -41,23 +50,23 @@ $(window).on('load', function () {
     }, 1500);
 })
 
+function on_click() {
+    setTimeout(() => {
+        document.location.reload();
+    }, 200);
+}
+
 function getDomain(url) {
     return url.replace("http://", "").replace("https://", "").split("/")[0];
 }
 
-function retrieveVOD(domain, finalString, contentStream, className) {
+function retrieveVOD(domain, contentStream, className) {
+    const key = domain.split("/")[3];
 
-    let found = false;
+    let fullUrl = domain + "/chunked/index-dvr.m3u8";
 
-    const key = finalString;
-
-    let fullUrl = "https://" + domain + "/" + finalString + "/chunked/index-dvr.m3u8";
-
-    let check = checkUrl(fullUrl);
-
-    check.then((data, statut) => {
+    checkUrl(fullUrl).then((data, statut) => {
         if (statut === "success") {
-            found = true;
             contentStream.innerHTML = '<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ' + className + '" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player"> <video id="video" class="vjs-tech vjs-matrix" controls><source src="' + fullUrl + '" type="application/x-mpegURL" id="vod"></video></div>';
 
             document.getElementById('video').onloadedmetadata = () => {
@@ -83,8 +92,14 @@ function retrieveVOD(domain, finalString, contentStream, className) {
             };
 
             var player = videojs('video', {
-                playbackRates: [0.5, 1, 1.25, 1.5, 2]
+                playbackRates: [0.5, 1, 1.25, 1.5, 2],
             });
+
+            videojs.Hls.xhr.beforeRequest = function (options) {
+                options.uri = options.uri.replace('unmuted.ts', 'muted.ts');
+                return options;
+            };
+
             player.play();
 
             setTimeout(() => {
@@ -95,7 +110,6 @@ function retrieveVOD(domain, finalString, contentStream, className) {
                 };
 
                 fetchChat(player.currentTime(), undefined).done(data => {
-                    console.log("Received data");
                     messages = $.parseJSON(data);
                 });
 
@@ -103,10 +117,7 @@ function retrieveVOD(domain, finalString, contentStream, className) {
                     if (!player.paused() && messages != undefined && messages.comments.length > 0) {
 
                         if (messages.comments.length == index) {
-                            console.log("Need refresh");
-
                             fetchChat(player.currentTime(), messages._next).done(data => {
-                                console.log("Received data next");
                                 messages = $.parseJSON(data);
 
                                 index = 0;
@@ -125,7 +136,4 @@ function retrieveVOD(domain, finalString, contentStream, className) {
             }, 1200);
         }
     });
-    //}
-
-    return found;
 }
