@@ -102,6 +102,16 @@ function retrieveVOD(domain, contentStream, className) {
 
             player.play();
 
+            document.addEventListener('keydown', (event) => {
+                const name = event.key;
+
+                if (name == "ArrowLeft") {
+                    player.currentTime(player.currentTime() - 5);
+                } else if (name == "ArrowRight") {
+                    player.currentTime(player.currentTime() + 5);
+                }
+            }, false);
+
             setTimeout(() => {
                 let index = 0;
 
