@@ -1,3 +1,5 @@
+// Chat need rework
+
 let chat = undefined;
 
 function addMessage(comment) {
@@ -6,8 +8,8 @@ function addMessage(comment) {
     let user_color = comment.message.user_color;
     let message = comment.message.body;
 
-    if (chat == undefined) {
-        chat = getElementByXpath('//ul[contains(@class, "InjectLayout")]');
+    if (chat == undefined || !chat.length) {
+        chat = $("ul[class*='InjectLayout']");
     }
 
     let injectLayout = document.createElement("li");
@@ -23,12 +25,12 @@ function addMessage(comment) {
                             <a data-test-selector="comment-author-selector" data-tt_content="tab_videos"
                                 data-tt_medium="video-message-author"
                                 class="ScCoreLink-udwpw5-0 FXIKh tw-link video-chat__message-author"
-                                rel="noopener noreferrer" target="_blank" href="/`+ username + `"><span><span
+                                rel="noopener noreferrer" target="_blank" href="/${username}"><span><span
                                         class="chat-author__display-name" data-a-target="chat-message-username"
-                                        data-a-user="`+ username + `" data-test-selector="message-username"
-                                        style="color: `+ user_color + `;">` + username + `</span></span></a>
+                                        data-a-user="${username}" data-test-selector="message-username"
+                                        style="color: ${user_color};">${username}</span></span></a>
                             <span class="InjectLayout-sc-588ddc-0 cQDIBe">: </span><span class=""><span
-                                    class="text-fragment" data-a-target="chat-message-text">`+ message + `</span></span>
+                                    class="text-fragment" data-a-target="chat-message-text">${message}</span></span>
                         </div>
                     </div>
                     <div class="sc-AxjAm YOLYM video-chat__message-menu" data-test-selector="menu-options-wrapper">
@@ -38,9 +40,9 @@ function addMessage(comment) {
             </div>
         </div>`;
 
-    chat.appendChild(injectLayout);
+    chat.append(injectLayout);
 
-    if (getElementByXpath('//div[contains(@class, "unsynced")]') == undefined) {
+    if (!$("div[class*='unsynced']").length) {
         injectLayout.scrollIntoView();
     }
 
