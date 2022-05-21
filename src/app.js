@@ -15,7 +15,24 @@ chrome.storage.local.get(['chat_toggle'], function (result) {
     settings.chat.enabled = result.chat_toggle;
 });
 
-$(window).on('load', function () {
+// On refresh
+$(window).on('load', checkSubOnlyVOD);
+
+// Listen when a sub only VOD is found
+chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
+    if (request.type === "load_vod") {
+        checkSubOnlyVOD();
+
+        sendResponse({ success: true });
+    }
+
+    return true;
+});
+
+function checkSubOnlyVOD() {
+    if (!window.location.href.toString().includes("/videos/")) {
+        return;
+    }
 
     setTimeout(() => {
 
@@ -54,14 +71,10 @@ $(window).on('load', function () {
                             video.remove();
 
                             // Add on click event on every left tab channels
-                            $("a[data-test-selector*='followed-channel']").click(() => {
-                                on_click();
-                            });
+                            $("a[data-test-selector*='followed-channel']").click(onClick);
 
                             // Add on click event on every vods
-                            $("img[src*='vods/']").click(() => {
-                                on_click();
-                            });
+                            $("img[src*='vods/']").click(onClick);
 
                             retrieveVOD(domain, className);
                         }, 1000);
@@ -70,10 +83,10 @@ $(window).on('load', function () {
             });
         }
     }, 1500);
-})
+}
 
 // Refresh current page on click to remove the extension player
-function on_click() {
+function onClick() {
     setTimeout(() => {
         document.location.reload();
     }, 200);
@@ -128,7 +141,7 @@ function retrieveVOD(domain, className) {
                 player.on('timeupdate', () => {
                     settings.current_watch["time"] = player.currentTime();
 
-                    chrome.runtime.sendMessage({ type: "update_time", data: settings.current_watch }, function (response) { });
+                    chrome.runtime.sendMessage({ type: "update", data: settings.current_watch }, function (response) { });
                 });
             };
 

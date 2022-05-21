@@ -13,18 +13,19 @@
         "service_worker": "src/background.js"
     },
     "host_permissions": [
-        "https://www.twitch.tv/videos/*"
+        "https://www.twitch.tv/*"
     ],
     "permissions": [
         "storage",
         "activeTab",
-        "tabs"
+        "tabs",
+        "webNavigation"
     ],
     "content_scripts": [
         {
             "run_at": "document_end",
             "matches": [
-                "https://www.twitch.tv/videos/*"
+                "https://www.twitch.tv/*"
             ],
             "js": [
                 "src/scripts/jquery-3.6.0.min.js",
