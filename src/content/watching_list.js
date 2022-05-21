@@ -12,22 +12,24 @@ function delete_vod(id) {
     });
 }
 
-// Fetch watching list from background
-chrome.runtime.sendMessage({ type: "fetch" }, function (response) {
-    if (response.success) {
-        watch_list = response.data;
+setTimeout(() => {
+    // Fetch watching list from background
+    chrome.runtime.sendMessage({ type: "fetch" }, function (response) {
+        if (response.success) {
+            watch_list = response.data;
 
-        console.log(watch_list);
+            console.log(watch_list);
+            console.log("Len : " + watch_list.length);
 
-        for (const [id, vod] of Object.entries(watch_list)) {
-            const author = id.split("_")[1];
-            const title = vod["title"];
-            const formatted_title = title.length > 38 ? title.substring(0, 38) + "..." : title;
+            for (const [id, vod] of Object.entries(watch_list)) {
+                const author = id.split("_")[1];
+                const title = vod["title"];
+                const formatted_title = title.length > 38 ? title.substring(0, 38) + "..." : title;
 
-            const start_time = toHHMMSS(vod["time"]);
-            const end_time = toHHMMSS(vod["max_time"]);
+                const start_time = toHHMMSS(vod["time"]);
+                const end_time = toHHMMSS(vod["max_time"]);
 
-            const element = `
+                const element = `
             <li class="watch_vod" id="${id}">
                 <div class="information">
                     <div class="title" title="${title}">${formatted_title}</div>
@@ -49,14 +51,15 @@ chrome.runtime.sendMessage({ type: "fetch" }, function (response) {
             <hr id="${id}-hr">
             `;
 
-            watch_element.innerHTML += element;
+                watch_element.innerHTML += element;
 
-            document.getElementById("delete_btn_" + id).onclick = () => {
-                delete_vod(id);
-            };
+                document.getElementById("delete_btn_" + id).onclick = () => {
+                    delete_vod(id);
+                };
+            }
         }
-    }
-});
+    });
+}, 300);
 
 // Format time and max_time
 function toHHMMSS(sec_num) {
