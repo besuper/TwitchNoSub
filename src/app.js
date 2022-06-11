@@ -97,17 +97,30 @@ function retrieveVOD(domain, className) {
     const contentStream = $("div[data-target='persistent-player-content']");
 
     const key = domain.split("/")[3];
-    const fullUrl = domain + "/chunked/index-dvr.m3u8";
 
-    checkUrl(fullUrl).then((_, statut) => {
+    const fullUrlsource = domain + "/chunked/index-dvr.m3u8";
+
+    checkUrl(fullUrlsource).then((_, statut) => {
         if (statut === "success") {
+
+            const fullUrl360 = domain + "/360p30/index-dvr.m3u8";
+            const fullUrl480 = domain + "/480p30/index-dvr.m3u8";
+            const fullUrl720 = domain + "/720p60/index-dvr.m3u8";
+            const fullUrl160 = domain + "/160p30/index-dvr.m3u8";
 
             // Insert the new player
             contentStream.html(
-                `<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused vjs-user-inactive ${className}" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player">
+                `<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused 
+                      vjs-user-inactive ${className}" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player">
+
                     <video id="video" class="vjs-tech vjs-matrix" controls>
-                        <source src="${fullUrl}" type="application/x-mpegURL" id="vod">
+                        <source src="${fullUrlsource}" type="application/x-mpegURL" id="vod" label="Source" selected="true">
+                        <source src="${fullUrl720}" type="application/x-mpegURL" id="vod" label="720p60">
+                        <source src="${fullUrl480}" type="application/x-mpegURL" id="vod" label="480p30">
+                        <source src="${fullUrl360}" type="application/x-mpegURL" id="vod" label="360p30">
+                        <source src="${fullUrl160}" type="application/x-mpegURL" id="vod" label="160p30">
                     </video>
+
                 </div>`
             );
 
@@ -145,9 +158,19 @@ function retrieveVOD(domain, className) {
                 });
             };
 
-            // Add playback speed settings
+            // Init the player
             var player = videojs('video', {
                 playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                controlBar: {
+                    children: [
+                        'playToggle',
+                        'volumePanel',
+                        'progressControl',
+                        'PlaybackRateMenuButton',
+                        'qualitySelector',
+                        'fullscreenToggle',
+                    ],
+                },
             });
 
             // Patch the m3u8 VOD file to be readable

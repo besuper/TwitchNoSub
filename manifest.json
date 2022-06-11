@@ -31,11 +31,13 @@
                 "src/scripts/jquery-3.6.0.min.js",
                 "src/scripts/video.min.js",
                 "src/scripts/videojs-http-streaming.min.js",
+                "src/scripts/silvermine-videojs-quality-selector.min.js",
                 "src/scripts/chat.js",
                 "src/app.js"
             ],
             "css": [
                 "src/style/video-js.min.css",
+                "src/style/quality-selector.css",
                 "src/style/custom.css"
             ]
         }
