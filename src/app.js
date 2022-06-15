@@ -148,7 +148,7 @@ function retrieveVOD(domain, className) {
 
                 // Save new volume in local storage
                 player.on('volumechange', () => {
-                    window.localStorage.setItem("volume", player.volume());
+                    window.localStorage.setItem("volume", player.muted() ? 0.0 : player.volume());
                 });
 
                 // Save new time in local storage
