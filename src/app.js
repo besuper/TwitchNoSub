@@ -132,6 +132,7 @@ function retrieveVOD(domain, className) {
                 // Fetch current VOD time from background (local storage)
                 chrome.runtime.sendMessage({ type: "fetch_data", id: key }, function (response) {
                     if (response.success) {
+
                         settings.current_watch["time"] = response.data["time"];
 
                         player.currentTime(settings.current_watch["time"]);
@@ -154,7 +155,7 @@ function retrieveVOD(domain, className) {
                 player.on('timeupdate', () => {
                     settings.current_watch["time"] = player.currentTime();
 
-                    chrome.runtime.sendMessage({ type: "update", data: settings.current_watch }, function (response) { });
+                    chrome.runtime.sendMessage({ type: "update", id: key, data: settings.current_watch }, function (response) { });
                 });
             };
 
