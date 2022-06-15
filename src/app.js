@@ -166,6 +166,7 @@ function retrieveVOD(domain, className) {
                         'playToggle',
                         'volumePanel',
                         'progressControl',
+                        'remainingTimeDisplay',
                         'PlaybackRateMenuButton',
                         'qualitySelector',
                         'fullscreenToggle',
