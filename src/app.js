@@ -200,8 +200,11 @@ function retrieveVOD(domain, className) {
                 },
             });
 
+             // Add custom class on video player to have a perfect size on all screen
+            player.addClass('channel-page__video-player');
+
             // Patch the m3u8 VOD file to be readable
-            videojs.Hls.xhr.beforeRequest = function (options) {
+            videojs.Vhs.xhr.beforeRequest = function (options) {
                 options.uri = options.uri.replace('unmuted.ts', 'muted.ts');
                 return options;
             };
