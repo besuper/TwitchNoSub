@@ -34,12 +34,29 @@ function checkSubOnlyVOD() {
         return;
     }
 
+    console.log("[TwitchNoSub] Twitch VOD found");
+
     setTimeout(() => {
 
         // Check if the page contains Sub only VOD message
-        const checkSub = $("div[data-a-target='player-overlay-content-gate']");
+        let checkSub = $("div[data-a-target='player-overlay-content-gate']");
 
-        if (checkSub.length) {
+        // If we don't find VOD
+        if (!checkSub.length) {
+            checkSub = undefined;
+
+            // Some twitch VODs are just black ?
+            checkSub = $("span[data-test-selector='seekbar-segment__segment']");
+
+            if (checkSub.length) {
+                console.log("[TwitchNoSub] This is not a sub-only VOD");
+
+                checkSub = undefined;
+            }
+        }
+
+        if (checkSub != undefined) {
+            console.log("[TwitchNoSub] Sub-only VOD found");
 
             // Replace sub only message with a loading gif
             checkSub.html('<img src="https://i.ibb.co/NTpWgM1/Rolling-1s-200px.gif" alt="Loading VOD">');
@@ -63,6 +80,8 @@ function checkSubOnlyVOD() {
                 dataType: 'json',
                 success: function (data, statut) {
                     if (statut === "success") {
+                        console.log("[TwitchNoSub] Succefully fetched VOD data");
+
                         const animated_preview_url = data.animated_preview_url;
                         const domain = animated_preview_url.split("/storyboards")[0].trim();
 
@@ -78,6 +97,8 @@ function checkSubOnlyVOD() {
 
                             retrieveVOD(domain, className);
                         }, 1000);
+                    } else {
+                        console.log("[TwitchNoSub] Unable to get VOD data");
                     }
                 }
             });
@@ -100,8 +121,12 @@ function retrieveVOD(domain, className) {
 
     const fullUrlsource = domain + "/chunked/index-dvr.m3u8";
 
+    console.log("[TwitchNoSub] Start retrieving VOD links");
+
     checkUrl(fullUrlsource).then((_, statut) => {
         if (statut === "success") {
+
+            console.log("[TwitchNoSub] VOD links success");
 
             const fullUrl360 = domain + "/360p30/index-dvr.m3u8";
             const fullUrl480 = domain + "/480p30/index-dvr.m3u8";
@@ -230,6 +255,8 @@ function retrieveVOD(domain, className) {
                     }
                 }, 1000);
             }, 1200);
+        } else {
+            console.log("[TwitchNoSub] VOD links not working");
         }
     });
 }
