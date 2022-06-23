@@ -11,6 +11,8 @@ const settings = {
     }
 };
 
+let vodSetup = false;
+
 chrome.storage.local.get(['chat_toggle'], function (result) {
     settings.chat.enabled = result.chat_toggle;
 });
@@ -21,7 +23,13 @@ $(window).on('load', checkSubOnlyVOD);
 // Listen when a sub only VOD is found
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     if (request.type === "load_vod") {
-        checkSubOnlyVOD();
+        if (vodSetup) {
+            // If a VOD is already loaded reload the page
+            // This prevent VOD to load twice
+            location.reload();
+        } else {
+            checkSubOnlyVOD();
+        }
 
         sendResponse({ success: true });
     }
@@ -30,9 +38,13 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
 });
 
 function checkSubOnlyVOD() {
-    if (!window.location.href.toString().includes("/videos/")) {
+    const currentURL = window.location.href.toString();
+
+    if (!currentURL.includes("/videos/") && !currentURL.includes("/video/") && !vodSetup) {
         return;
     }
+
+    vodSetup = true;
 
     console.log("[TwitchNoSub] Twitch VOD found");
 
@@ -200,7 +212,7 @@ function retrieveVOD(domain, className) {
                 },
             });
 
-             // Add custom class on video player to have a perfect size on all screen
+            // Add custom class on video player to have a perfect size on all screen
             player.addClass('channel-page__video-player');
 
             // Patch the m3u8 VOD file to be readable

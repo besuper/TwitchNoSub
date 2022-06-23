@@ -78,7 +78,7 @@ setInterval(() => {
 // On update in tabs
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
     // If the link changed and contains specific VOD url
-    if (details.transitionType === "link" && details.url.includes("/videos/")) {
+    if (details.transitionType === "link" && (details.url.includes("/videos/") || details.url.includes("/video/"))) {
         const key = details.tabId + "";
 
         // Don't send message twice cause event is fired twice
