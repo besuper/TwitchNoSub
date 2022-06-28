@@ -19,3 +19,30 @@
     display: inline-flex !important;
     position: relative !important;
 }
+
+.custom-chat-3 {
+    align-items: flex-start !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+}
+
+.emoticon {
+    display: inline !important;
+}
+
+.emoticon-1 {
+    display: inline-block !important;
+    text-align: center !important;
+}
+
+.separator {
+    padding-right: 0.5rem !important;
+}
+
+.inline {
+    display: inline !important;
+}
+
+.username {
+    text-decoration: none;
+}

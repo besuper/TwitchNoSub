@@ -4,9 +4,10 @@ Be able to watch any sub-only vod on Twitch, integrated in the website with the 
 
 ## Features
 
-- Integrated in Twitch (not fully)
+- Integrated in Twitch
 - Save current time/sound state for vod
 - In real time chat
+- Support chat emotes
 
 ## Download & installation
 

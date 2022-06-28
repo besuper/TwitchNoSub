@@ -1,18 +1,37 @@
 let chat = undefined;
 
 function addMessage(comment) {
-    let username = comment.commenter.display_name;
-    let user_color = comment.message.user_color;
-    let message = comment.message.body;
-
     if (chat == undefined || !chat.length) {
         chat = $("ul[class*='InjectLayout']");
     }
 
+    let username = comment.commenter.display_name;
+    let user_color = comment.message.user_color;
+    let fragments_element = "";
+
+    comment.message.fragments.forEach(fragment => {
+        if (fragment.emoticon == undefined) {
+            //No emoticons, text fragment
+            fragments_element += `<span class="text-fragment" data-a-target="chat-message-text">${fragment.text}</span>`;
+        } else {
+            let url = `https://static-cdn.jtvnw.net/emoticons/v2/${fragment.emoticon.emoticon_id}`;
+
+            fragments_element += `
+            <div class="InjectLayout-sc-588ddc-0 emoticon">
+                <span data-a-target="emote-name" aria-describedby="${comment._id}">
+                    <div class="Layout-sc-nxg1ff-0 emoticon-1 chat-image__container">
+                        <img alt="${fragment.text}" class="chat-image chat-line__message--emote" src="${url}/default/dark/1.0" srcset="${url}/default/dark/1.0 1x,${url}/default/dark/2.0 2x,${url}/dark/3.0 4x">
+                    </div>
+                </span>
+            </div>
+            `;
+        }
+    });
+
     chat.append(`
     <li class="InjectLayout-sc-588ddc-0 chat-element">
         <div class="Layout-sc-nxg1ff-0 custom-chat vod-message vod-message--timestamp" data-test-selector="message-layout">
-            <div class="Layout-sc-nxg1ff-0 custom-chat-1 vod-message__header" data-test-selector="message-timestamp">
+            <div class="Layout-sc-nxg1ff-0 separator custom-chat-1 vod-message__header" data-test-selector="message-timestamp">
             
                 <div class="Layout-sc-nxg1ff-0 hdbMZz">
                     <div aria-describedby="${comment._id}" class="Layout-sc-nxg1ff-0 ScAttachedTooltipWrapper-sc-v8mg6d-0 custom-chat-2">
@@ -26,15 +45,15 @@ function addMessage(comment) {
                 </div>
 
             </div>
-            <div class="Layout-sc-nxg1ff-0 fQeqDH">
-                <div class="Layout-sc-nxg1ff-0 liFCyD">
+            <div class="Layout-sc-nxg1ff-0 chat-element">
+                <div class="Layout-sc-nxg1ff-0 custom-chat-3">
                     <div class="Layout-sc-nxg1ff-0 aleoz">
                         <span></span>
 
                         <a data-test-selector="comment-author-selector"
                             data-tt_content="tab_videos" data-tt_medium="video-message-author"
-                            class="ScCoreLink-sc-udwpw5-0 ktfxqP tw-link video-chat__message-author"
-                             rel="noopener noreferrer" target="_blank" href="/${username}">
+                            class="ScCoreLink-sc-udwpw5-0 username tw-link video-chat__message-author"
+                            rel="noopener noreferrer" target="_blank" href="/${username}">
 
                             <span>
                                  <span class="chat-author__display-name" data-a-target="chat-message-username" 
@@ -43,12 +62,10 @@ function addMessage(comment) {
                             </span>
                         </a>
 
-                        <div class="Layout-sc-nxg1ff-0 duJXWu video-chat__message"
-                            data-test-selector="comment-message-selector">
-
-                            <span class="InjectLayout-sc-588ddc-0 eMvMmJ">:</span>
+                        <div class="Layout-sc-nxg1ff-0 inline video-chat__message" data-test-selector="comment-message-selector">
+                            <span class="InjectLayout-sc-588ddc-0 separator">:</span>
                             <span class="">
-                                <span class="text-fragment" data-a-target="chat-message-text">${message}</span>
+                                ${fragments_element}
                             </span>
                         </div>
 
