@@ -1,3 +1,7 @@
+.chat-element {
+    width: 100% !important;
+}
+
 .custom-chat {
     align-items: flex-start !important;
     display: flex !important;

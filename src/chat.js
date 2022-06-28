@@ -10,7 +10,7 @@ function addMessage(comment) {
     }
 
     chat.append(`
-    <li class="InjectLayout-sc-588ddc-0 frwpku">
+    <li class="InjectLayout-sc-588ddc-0 chat-element">
         <div class="Layout-sc-nxg1ff-0 custom-chat vod-message vod-message--timestamp" data-test-selector="message-layout">
             <div class="Layout-sc-nxg1ff-0 custom-chat-1 vod-message__header" data-test-selector="message-timestamp">
             
