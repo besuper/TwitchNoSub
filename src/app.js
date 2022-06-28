@@ -97,6 +97,8 @@ function checkSubOnlyVOD() {
                         const animated_preview_url = data.animated_preview_url;
                         const domain = animated_preview_url.split("/storyboards")[0].trim();
 
+                        console.log("[TwitchNoSub] Domain : " + domain);
+
                         setTimeout(() => {
                             // Remove the current player
                             video.remove();
@@ -134,6 +136,7 @@ function retrieveVOD(domain, className) {
     const fullUrlsource = domain + "/chunked/index-dvr.m3u8";
 
     console.log("[TwitchNoSub] Start retrieving VOD links");
+    console.log("[TwitchNoSub] Url : " + fullUrlsource);
 
     checkUrl(fullUrlsource).then((_, statut) => {
         if (statut === "success") {
@@ -194,6 +197,26 @@ function retrieveVOD(domain, className) {
 
                     chrome.runtime.sendMessage({ type: "update", id: key, data: settings.current_watch }, function (response) { });
                 });
+
+                // Support for time query in URL (?t=1h15m56s)
+                const params = (new URL(document.location)).searchParams;
+                const time = params.get("t");
+
+                if (time != undefined) {
+                    let final_time = 0;
+
+                    const first_split = time.split("h");
+                    let hours = parseInt(first_split[0]);
+                    const second_split = first_split[1].split("m");
+                    let minutes = parseInt(second_split[0]);
+                    let seconds = parseInt(second_split[1].replace("s", ""));
+
+                    final_time += (hours * 3600);
+                    final_time += (minutes * 60);
+                    final_time += seconds;
+
+                    player.currentTime(final_time);
+                }
             };
 
             // Init the player
