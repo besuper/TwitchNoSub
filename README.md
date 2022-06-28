@@ -22,6 +22,10 @@ You have to install the extension manually:
 
 Go on a Twitch VOD and watch it.
 
+Chat is disabled by default, to enable it: 
+- Click on the extension icon
+- Go to the settings tab and hit **Chat replay**
+
 ## Warning
 
 This extension is still in work in progress, if there is any issue please report it.
