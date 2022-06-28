@@ -270,6 +270,16 @@ function retrieveVOD(domain, className) {
                 } else if (name == "ArrowRight") {
                     player.currentTime(player.currentTime() + 5);
                 }
+
+                if (name == " ") {
+                    event.preventDefault();
+
+                    if (player.paused()) {
+                        player.play();
+                    } else {
+                        player.pause();
+                    }
+                }
             }, false);
 
             if (!settings.chat.enabled) {
