@@ -149,6 +149,7 @@ function retrieveVOD(domain, className) {
 
     checkUrl(fullUrlsource).then((_, statut) => {
         if (statut === "success") {
+            let seeked = false;
 
             console.log("[TwitchNoSub] VOD links success");
 
@@ -205,6 +206,11 @@ function retrieveVOD(domain, className) {
                     settings.current_watch["time"] = player.currentTime();
 
                     chrome.runtime.sendMessage({ type: "update", id: key, data: settings.current_watch }, function (response) { });
+                });
+
+                // User moved forward or backard in the VOD
+                player.on('seeked', () => {
+                    seeked = true;
                 });
 
                 // Support for time query in URL (?t=1h15m56s)
@@ -283,31 +289,30 @@ function retrieveVOD(domain, className) {
 
                 setInterval(() => {
                     if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
-                        if (messages.comments.length == index) {
+                        if (seeked) {
+                            seeked = false;
+
+                            // If seeked reset the current chat cursor
+                            fetchChat(vod_id, player.currentTime(), undefined).done(data => {
+                                messages = $.parseJSON(data);
+                                index = 0;
+                            });
+
+                            return;
+                        }
+
+                        if (messages.comments.length <= index) {
                             fetchChat(vod_id, player.currentTime(), messages._next).done(data => {
                                 messages = $.parseJSON(data);
-
                                 index = 0;
                             });
                         }
 
                         messages.comments.forEach(comment => {
-                            let diff = player.currentTime() - comment.content_offset_seconds;
-
-                            if (diff < -200) {
-                                // Player is too backward
-                                messages._next = undefined;
-                                index = messages.comments.length; // Force to send a request
-                            } else {
-                                if (comment.content_offset_seconds <= player.currentTime()) {
-                                    addMessage(comment);
-                                    delete messages.comments[index];
-                                    index++;
-                                } else {
-                                    // Means the player is too forwad for the API
-                                    // Reset current chat cursor
-                                    messages._next = undefined;
-                                }
+                            if (comment.content_offset_seconds <= player.currentTime()) {
+                                addMessage(comment);
+                                delete messages.comments[index];
+                                index++;
                             }
                         });
                     }

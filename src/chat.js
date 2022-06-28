@@ -5,6 +5,18 @@ function addMessage(comment) {
         chat = $("ul[class*='InjectLayout']");
     }
 
+    if (comment == undefined) {
+        return;
+    }
+
+    if (comment.message == undefined) {
+        return;
+    }
+
+    if (comment.message.fragments == undefined) {
+        return;
+    }
+
     let username = comment.commenter.display_name;
     let user_color = comment.message.user_color;
     let fragments_element = "";
