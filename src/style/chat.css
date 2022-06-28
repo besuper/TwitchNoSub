@@ -1,0 +1,17 @@
+.custom-chat {
+    align-items: flex-start !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+}
+
+.custom-chat-1 {
+    display: flex !important;
+    flex-shrink: 0 !important;
+    text-align: right !important;
+}
+
+.custom-chat-2 {
+    display: inline-flex !important;
+    position: relative !important;
+}

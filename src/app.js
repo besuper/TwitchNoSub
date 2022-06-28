@@ -128,6 +128,15 @@ function onClick() {
 }
 
 function retrieveVOD(domain, className) {
+    let currentURL = window.location.toString();
+
+    // If the URL contains queries, remove them
+    if (currentURL.includes("?")) {
+        currentURL = currentURL.split("?")[0];
+    }
+
+    const vod_id = currentURL.split("/").pop();
+
     // Content twitch player
     const contentStream = $("div[data-target='persistent-player-content']");
 
@@ -265,18 +274,17 @@ function retrieveVOD(domain, className) {
                 let index = 0;
 
                 let messages = {
-                    "comments": []
+                    comments: []
                 };
 
-                fetchChat(player.currentTime(), undefined).done(data => {
+                fetchChat(vod_id, player.currentTime(), undefined).done(data => {
                     messages = $.parseJSON(data);
                 });
 
                 setInterval(() => {
-                    if (!player.paused() && messages != undefined && messages.comments.length > 0 && settings.chat.enabled) {
-
+                    if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
                         if (messages.comments.length == index) {
-                            fetchChat(player.currentTime(), messages._next).done(data => {
+                            fetchChat(vod_id, player.currentTime(), messages._next).done(data => {
                                 messages = $.parseJSON(data);
 
                                 index = 0;
@@ -284,10 +292,22 @@ function retrieveVOD(domain, className) {
                         }
 
                         messages.comments.forEach(comment => {
-                            if (comment.content_offset_seconds <= player.currentTime()) {
-                                addMessage(comment);
-                                delete messages.comments[index];
-                                index++;
+                            let diff = player.currentTime() - comment.content_offset_seconds;
+
+                            if (diff < -200) {
+                                // Player is too backward
+                                messages._next = undefined;
+                                index = messages.comments.length; // Force to send a request
+                            } else {
+                                if (comment.content_offset_seconds <= player.currentTime()) {
+                                    addMessage(comment);
+                                    delete messages.comments[index];
+                                    index++;
+                                } else {
+                                    // Means the player is too forwad for the API
+                                    // Reset current chat cursor
+                                    messages._next = undefined;
+                                }
                             }
                         });
                     }
