@@ -1,12 +1,16 @@
-.vjs-control-bar {
-    background-color: transparent !important;
-    font-size: 125%;
-}
+html {
+    --plyr-color-main: #772ce8;
+    --plyr-video-controls-background: transparent;
 
-.vjs-control {
-    text-shadow: 2px 2px 5px black;
-}
+    /* Menu */
+    --plyr-menu-color: white;
+    --plyr-menu-item-arrow-color: white;
+    --plyr-menu-arrow-size: 12px;
+    --plyr-menu-background: #18181b;
 
-.vjs-play-progress {
-    background-color: #772ce8 !important;
+    /* Tooltip (time) */
+    --plyr-tooltip-color: white;
+    --plyr-tooltip-background: rgba(255, 255, 255, 0.5);
+    --plyr-tooltip-shadow: none;
+
 }

@@ -77,57 +77,29 @@ function checkSubOnlyVOD() {
             const video = $("div[class*=persistent-player]");
             const className = video.attr("class");
 
+            console.log("" + className);
+
             const vodID = window.location.toString().split("/").pop();
 
             settings.current_watch["link"] = vodID;
 
-            // Fetch VOD data
-            $.ajax({
-                url: "https://api.twitch.tv/kraken/videos/" + vodID,
-                headers: {
-                    "Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-                    "Accept": "application/vnd.twitchtv.v5+json"
-                },
-                type: 'GET',
-                dataType: 'json',
-                success: function (data, statut) {
-                    if (statut === "success") {
-                        console.log("[TwitchNoSub] Succefully fetched VOD data");
+            setTimeout(() => {
+                // Remove the current player
+                video.remove();
 
-                        const animated_preview_url = data.animated_preview_url;
-                        const domain = animated_preview_url.split("/storyboards")[0].trim();
+                // Add on click event on every left tab channels
+                $("a[data-test-selector*='followed-channel']").click(onClick);
 
-                        console.log("[TwitchNoSub] Domain : " + domain);
+                // Add on click event on every vods
+                $("img[src*='vods/']").click(onClick);
 
-                        setTimeout(() => {
-                            // Remove the current player
-                            video.remove();
-
-                            // Add on click event on every left tab channels
-                            $("a[data-test-selector*='followed-channel']").click(onClick);
-
-                            // Add on click event on every vods
-                            $("img[src*='vods/']").click(onClick);
-
-                            retrieveVOD(domain, className);
-                        }, 1000);
-                    } else {
-                        console.log("[TwitchNoSub] Unable to get VOD data");
-                    }
-                }
-            });
+                retrieveVOD(className);
+            }, 1000);
         }
     }, 1500);
 }
 
-// Refresh current page on click to remove the extension player
-function onClick() {
-    setTimeout(() => {
-        document.location.reload();
-    }, 200);
-}
-
-function retrieveVOD(domain, className) {
+function retrieveVOD(className) {
     let currentURL = window.location.toString();
 
     // If the URL contains queries, remove them
@@ -137,55 +109,99 @@ function retrieveVOD(domain, className) {
 
     const vod_id = currentURL.split("/").pop();
 
-    // Content twitch player
-    const contentStream = $("div[data-target='persistent-player-content']");
+    let seeked = false;
 
-    const key = domain.split("/")[3];
+    fetchTwitchData(vod_id, (data) => {
+        // Insert the new video player
+        const contentStream = $("div[data-target='persistent-player-content']");
+        contentStream.html(`<video id="player" class="${className}" playsinline controls></video>`);
 
-    const fullUrlsource = domain + "/chunked/index-dvr.m3u8";
+        const video = document.querySelector('#player');
+        const resolutions = data.resolutions;
 
-    console.log("[TwitchNoSub] Start retrieving VOD links");
-    console.log("[TwitchNoSub] Url : " + fullUrlsource);
+        console.log("[TwitchNoSub] Start retrieving VOD links");
+        console.log("[TwitchNoSub] VOD resolutions : " + JSON.stringify(resolutions));
 
-    checkUrl(fullUrlsource).then((_, statut) => {
-        if (statut === "success") {
-            let seeked = false;
+        const currentURL = new URL(data.animated_preview_url);
 
-            console.log("[TwitchNoSub] VOD links success");
+        const domain = currentURL.host;
+        const vodSpecialID = currentURL.pathname.split("/")[1];
 
-            const fullUrl360 = domain + "/360p30/index-dvr.m3u8";
-            const fullUrl480 = domain + "/480p30/index-dvr.m3u8";
-            const fullUrl720 = domain + "/720p60/index-dvr.m3u8";
-            const fullUrl160 = domain + "/160p30/index-dvr.m3u8";
+        console.log("[TwitchNoSub] VOD ID : " + vodSpecialID);
 
-            // Insert the new player
-            contentStream.html(
-                `<div data-setup="{}" preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused 
-                      vjs-user-inactive ${className}" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player">
+        const availableURLS = Object.entries(resolutions).map(([resKey, resVal]) => {
+            return {
+                "resolution": resVal,
+                "fps": data.fps[resKey],
+                "url": "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8"
+            };
+        });
 
-                    <video id="video" class="vjs-tech vjs-matrix" controls>
-                        <source src="${fullUrlsource}" type="application/x-mpegURL" id="vod" label="Source" selected="true">
-                        <source src="${fullUrl720}" type="application/x-mpegURL" id="vod" label="720p60">
-                        <source src="${fullUrl480}" type="application/x-mpegURL" id="vod" label="480p30">
-                        <source src="${fullUrl360}" type="application/x-mpegURL" id="vod" label="360p30">
-                        <source src="${fullUrl160}" type="application/x-mpegURL" id="vod" label="160p30">
-                    </video>
+        const playlistString = createM3u8Playlist(availableURLS);
+        const encodedPlaylistString = new TextEncoder().encode(playlistString);
+        const blobUrl = URL.createObjectURL(new Blob([encodedPlaylistString]));
 
-                </div>`
-            );
+        const hls = new Hls({
+            xhrSetup: (xhr, _url) => {
+                // Patch the m3u8 VOD file to be readable
+                xhr.open('GET', _url.replace('unmuted.ts', 'muted.ts'), true);
+            },
+        });
 
-            document.getElementById('video').onloadedmetadata = () => {
+        hls.loadSource(blobUrl);
+
+        // When m3u8 is parsed
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const availableQualities = hls.levels.map((l) => l.height);
+
+            const player = new Plyr(video, {
+                invertTime: false,
+                quality: {
+                    default: availableQualities[0],
+                    options: availableQualities,
+                    forced: true,
+                    onChange: (quality) => updateQuality(quality, hls),
+                },
+            });
+
+            hls.attachMedia(video);
+
+            player.play();
+
+            document.addEventListener('keydown', (event) => {
+                const name = event.key;
+
+                // Backward and forward with arrow keys
+                if (name == "ArrowLeft") {
+                    player.currentTime = player.currentTime - 5;
+                } else if (name == "ArrowRight") {
+                    player.currentTime = player.currentTime + 5;
+                }
+
+                if (name == " ") {
+                    event.preventDefault();
+
+                    if (player.paused) {
+                        player.play();
+                    } else {
+                        player.pause();
+                    }
+                }
+            }, false);
+
+            video.onloadedmetadata = () => {
+                // Fetch current VOD informations
                 settings.current_watch["title"] = $("h2[data-a-target='stream-title']").text();
-                settings.current_watch["id"] = key;
-                settings.current_watch["max_time"] = player.currentTime() + player.remainingTime();
+                settings.current_watch["id"] = vodSpecialID;
+                settings.current_watch["max_time"] = player.duration;
 
                 // Fetch current VOD time from background (local storage)
-                chrome.runtime.sendMessage({ type: "fetch_data", id: key }, function (response) {
+                chrome.runtime.sendMessage({ type: "fetch_data", id: vodSpecialID }, function (response) {
                     if (response.success) {
 
                         settings.current_watch["time"] = response.data["time"];
 
-                        player.currentTime(settings.current_watch["time"]);
+                        player.currentTime = settings.current_watch["time"];
                     }
                 });
 
@@ -193,19 +209,19 @@ function retrieveVOD(domain, className) {
                 const volume = window.localStorage.getItem("volume");
 
                 if (volume != undefined) {
-                    player.volume(volume);
+                    player.volume = volume;
                 }
 
                 // Save new volume in local storage
                 player.on('volumechange', () => {
-                    window.localStorage.setItem("volume", player.muted() ? 0.0 : player.volume());
+                    window.localStorage.setItem("volume", player.muted ? 0.0 : player.volume);
                 });
 
                 // Save new time in local storage
                 player.on('timeupdate', () => {
-                    settings.current_watch["time"] = player.currentTime();
+                    settings.current_watch["time"] = player.currentTime;
 
-                    chrome.runtime.sendMessage({ type: "update", id: key, data: settings.current_watch }, function (response) { });
+                    chrome.runtime.sendMessage({ type: "update", id: vodSpecialID, data: settings.current_watch }, function (response) { });
                 });
 
                 // User moved forward or backard in the VOD
@@ -230,58 +246,11 @@ function retrieveVOD(domain, className) {
                     final_time += (minutes * 60);
                     final_time += seconds;
 
-                    player.currentTime(final_time);
+                    player.currentTime = final_time;
                 }
             };
 
-            // Init the player
-            var player = videojs('video', {
-                playbackRates: [0.5, 1, 1.25, 1.5, 2],
-                controlBar: {
-                    children: [
-                        'playToggle',
-                        'volumePanel',
-                        'progressControl',
-                        'remainingTimeDisplay',
-                        'PlaybackRateMenuButton',
-                        'qualitySelector',
-                        'fullscreenToggle',
-                    ],
-                },
-            });
-
-            // Add custom class on video player to have a perfect size on all screen
-            player.addClass('channel-page__video-player');
-
-            // Patch the m3u8 VOD file to be readable
-            videojs.Vhs.xhr.beforeRequest = function (options) {
-                options.uri = options.uri.replace('unmuted.ts', 'muted.ts');
-                return options;
-            };
-
-            player.play();
-
-            document.addEventListener('keydown', (event) => {
-                const name = event.key;
-
-                // Backward and forward with arrow keys
-                if (name == "ArrowLeft") {
-                    player.currentTime(player.currentTime() - 5);
-                } else if (name == "ArrowRight") {
-                    player.currentTime(player.currentTime() + 5);
-                }
-
-                if (name == " ") {
-                    event.preventDefault();
-
-                    if (player.paused()) {
-                        player.play();
-                    } else {
-                        player.pause();
-                    }
-                }
-            }, false);
-
+            // Chat
             if (!settings.chat.enabled) {
                 return;
             }
@@ -293,17 +262,17 @@ function retrieveVOD(domain, className) {
                     comments: []
                 };
 
-                fetchChat(vod_id, player.currentTime(), undefined).done(data => {
+                fetchChat(vod_id, player.currentTime, undefined).done(data => {
                     messages = $.parseJSON(data);
                 });
 
                 setInterval(() => {
-                    if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
+                    if (!player.paused && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
                         if (seeked) {
                             seeked = false;
 
                             // If seeked reset the current chat cursor
-                            fetchChat(vod_id, player.currentTime(), undefined).done(data => {
+                            fetchChat(vod_id, player.currentTime, undefined).done(data => {
                                 messages = $.parseJSON(data);
                                 index = 0;
                             });
@@ -312,14 +281,14 @@ function retrieveVOD(domain, className) {
                         }
 
                         if (messages.comments.length <= index) {
-                            fetchChat(vod_id, player.currentTime(), messages._next).done(data => {
+                            fetchChat(vod_id, player.currentTime, messages._next).done(data => {
                                 messages = $.parseJSON(data);
                                 index = 0;
                             });
                         }
 
                         messages.comments.forEach(comment => {
-                            if (comment.content_offset_seconds <= player.currentTime()) {
+                            if (comment.content_offset_seconds <= player.currentTime) {
                                 addMessage(comment);
                                 delete messages.comments[index];
                                 index++;
@@ -328,20 +297,51 @@ function retrieveVOD(domain, className) {
                     }
                 }, 1000);
             }, 1200);
-        } else {
-            console.log("[TwitchNoSub] VOD links not working");
+        });
+    });
+}
+
+// Fetch data from Twitch API for the VOD
+function fetchTwitchData(vodID, success) {
+    $.ajax({
+        url: "https://api.twitch.tv/kraken/videos/" + vodID,
+        headers: {
+            "Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+            "Accept": "application/vnd.twitchtv.v5+json"
+        },
+        type: 'GET',
+        dataType: 'json',
+        async: true,
+        success: function (data, statut) {
+            if (statut === "success") {
+                success(data);
+            }
         }
     });
 }
 
-function checkUrl(url) {
-    return $.ajax({
-        url: url,
-        type: 'GET',
-        dataType: 'html',
-        async: false,
-        success: function (_, statut) {
-            return statut === "success";
+// Generate a m3u8 playlist with VODs url of all resolutions
+function createM3u8Playlist(urls) {
+    let stream = '';
+    urls.forEach((data, val) => {
+        stream += `#EXT-X-STREAM-INF:BANDWIDTH=${100 - val},RESOLUTION=${data.resolution},FRAME-RATE=${data.fps}\n`;
+        stream += `${data.url}\n`;
+    });
+    return '#EXTM3U\n' + stream;
+}
+
+// Fired when the quality is updated
+function updateQuality(quality, hlsInstance) {
+    hlsInstance.levels.forEach((level, idx) => {
+        if (level.height === quality) {
+            hlsInstance.currentLevel = idx;
         }
     });
+};
+
+// Refresh current page on click to remove the extension player
+function onClick() {
+    setTimeout(() => {
+        document.location.reload();
+    }, 200);
 }

@@ -29,15 +29,13 @@
             ],
             "js": [
                 "src/scripts/jquery-3.6.0.min.js",
-                "src/scripts/video.min.js",
-                "src/scripts/videojs-http-streaming.min.js",
-                "src/scripts/silvermine-videojs-quality-selector.min.js",
+                "src/scripts/plyr-polyfilled-3.7.2.js",
+                "src/scripts/hls-1.1.5.min.js",
                 "src/chat.js",
                 "src/app.js"
             ],
             "css": [
-                "src/style/video-js.min.css",
-                "src/style/quality-selector.css",
+                "src/style/plyr-3.7.2.css",
                 "src/style/custom.css",
                 "src/style/chat.css"
             ]
