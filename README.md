@@ -1,6 +1,8 @@
 # TwitchNoSub
 
-Be able to watch any sub-only vod on Twitch, integrated in the website with the chat. (Only work for chrome/edge for now)
+Be able to watch any sub-only vod on Twitch, integrated in the website with the chat.
+
+Support chromium based browser (Chrome, Edge, Brave, ...) and Firefox.
 
 ## Features
 
