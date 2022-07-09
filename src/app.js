@@ -313,9 +313,7 @@ function fetchTwitchData(vodID, success) {
         dataType: 'json',
         async: true,
         success: function (data, statut) {
-            if (statut === "success") {
-                success(data);
-            }
+            success(data);
         }
     });
 }
