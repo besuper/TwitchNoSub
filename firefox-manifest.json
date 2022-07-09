@@ -1,6 +1,6 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.3",
+    "version": "0.4",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 2,
     "icons": {

@@ -128,14 +128,28 @@ function retrieveVOD(className) {
         const vodSpecialID = currentURL.pathname.split("/")[1];
 
         console.log("[TwitchNoSub] VOD ID : " + vodSpecialID);
+        console.log("[TwitchNoSub] VOD type : " + data.broadcast_type);
 
-        const availableURLS = Object.entries(resolutions).map(([resKey, resVal]) => {
-            return {
-                "resolution": resVal,
-                "fps": data.fps[resKey],
-                "url": "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8"
-            };
-        });
+        let availableURLS = [];
+
+        if (data.broadcast_type == "highlight") {
+            availableURLS = Object.entries(resolutions).map(([resKey, resVal]) => {
+                return {
+                    "resolution": resVal,
+                    "fps": data.fps[resKey],
+                    "url": "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/highlight-" + vod_id + ".m3u8"
+                };
+            });
+        } else {
+            // Default vod type archive
+            availableURLS = Object.entries(resolutions).map(([resKey, resVal]) => {
+                return {
+                    "resolution": resVal,
+                    "fps": data.fps[resKey],
+                    "url": "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8"
+                };
+            });
+        }
 
         const playlistString = createM3u8Playlist(availableURLS);
         const encodedPlaylistString = new TextEncoder().encode(playlistString);
