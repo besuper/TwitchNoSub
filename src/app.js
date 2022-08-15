@@ -1,6 +1,8 @@
 const settings = {
-    chat: {
-        enabled: true,
+    user: {
+        chat: {
+            enabled: false,
+        }
     },
     current_watch: {
         "id": "",
@@ -13,8 +15,9 @@ const settings = {
 
 let vodSetup = false;
 
-chrome.storage.local.get(['chat_toggle'], function (result) {
-    settings.chat.enabled = result.chat_toggle;
+// Fetch user settings
+chrome.storage.local.get(['user_settings'], function (result) {
+    settings.user = JSON.parse(result.user_settings);
 });
 
 // Need to inject libs for firefox
@@ -56,7 +59,6 @@ function checkSubOnlyVOD() {
     console.log("[TwitchNoSub] Twitch VOD found");
 
     setTimeout(() => {
-
         // Check if the page contains Sub only VOD message
         let checkSub = $("div[data-a-target='player-overlay-content-gate']");
 
@@ -119,15 +121,9 @@ function retrieveVOD(className) {
     var player = null;
 
     fetchTwitchData(vod_id, (data) => {
+        console.log(data);
+
         const resolutions = data.resolutions;
-
-        const reversedResolutions = {};
-
-        // Reverse resolutions to show the highest quality first
-        const resEntries = Object.entries(resolutions);
-        for (let i = resEntries.length - 1; i >= 0; i--) {
-            reversedResolutions[resEntries[i][0]] = resEntries[i][1];
-        }
 
         console.log("[TwitchNoSub] Start retrieving VOD links");
         console.log("[TwitchNoSub] VOD resolutions : " + JSON.stringify(resolutions));
@@ -143,15 +139,15 @@ function retrieveVOD(className) {
         let sources = "";
 
         if (data.broadcast_type == "highlight") {
-            Object.entries(reversedResolutions).map(([resKey, _]) => {
+            Object.entries(resolutions).map(([resKey, _]) => {
                 let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/highlight-" + vod_id + ".m3u8";
-                sources += `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>`;
+                sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
             });
         } else {
             // Default vod type archive
-            Object.entries(reversedResolutions).map(([resKey, _]) => {
+            Object.entries(resolutions).map(([resKey, _]) => {
                 let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8";
-                sources += `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>`;
+                sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
             });
         }
 
@@ -315,7 +311,7 @@ function retrieveVOD(className) {
         }, false);
 
         // Chat
-        if (!settings.chat.enabled) {
+        if (!settings.user.chat.enabled) {
             return;
         }
 
@@ -331,7 +327,7 @@ function retrieveVOD(className) {
             });
 
             setInterval(() => {
-                if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
+                if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.user.chat.enabled) {
                     if (seeked) {
                         seeked = false;
 

@@ -91,7 +91,11 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
 
         // Send to the app script that the user is on a VOD
         setTimeout(() => {
-            chrome.tabs.sendMessage(details.tabId, { type: "load_vod" }, function () { });
+            chrome.tabs.sendMessage(details.tabId, { type: "load_vod" }, function () {
+                if (key in loaded_vod) {
+                    delete loaded_vod[key];
+                }
+            });
         }, 1200);
     }
 
