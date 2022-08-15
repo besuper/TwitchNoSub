@@ -1,16 +1,97 @@
-html {
-    --plyr-color-main: #772ce8;
-    --plyr-video-controls-background: transparent;
+/*
+Custom player CSS
+*/
+.vjs-control-bar {
+    background-color: transparent !important;
+    font-size: 125%;
+}
 
-    /* Menu */
-    --plyr-menu-color: white;
-    --plyr-menu-item-arrow-color: white;
-    --plyr-menu-arrow-size: 12px;
-    --plyr-menu-background: #18181b;
+.vjs-play-progress {
+    background-color: #772ce8 !important;
+}
 
-    /* Tooltip (time) */
-    --plyr-tooltip-color: white;
-    --plyr-tooltip-background: rgba(255, 255, 255, 0.5);
-    --plyr-tooltip-shadow: none;
+.video-js .vjs-current-time {
+    display: block;
+}
 
+.vjs-menu-content {
+    background-color: #18181b !important;
+    border-radius: 4px !important;
+}
+
+.video-js .vjs-control:focus:before,
+.video-js .vjs-control:hover:before,
+.video-js .vjs-control:focus .vjs-menu-item-text {
+    text-shadow: none !important;
+    outline: none;
+    box-shadow: none;
+}
+
+.vjs-menu-item:hover {
+    background-color: #464649 !important;
+}
+
+.video-js .vjs-volume-level {
+    background-color: #772ce8 !important;
+}
+
+.vjs-progress-control {
+    width: 100% !important;
+    bottom: 25px !important;
+    position: absolute !important;
+    padding: 0 8px 0 8px !important;
+}
+
+.vjs-current-time {
+    bottom: 45px !important;
+    position: absolute !important;
+    padding-left: 15px !important;
+}
+
+.vjs-spacer {
+    width: 100%;
+}
+
+.video-js {
+    font-family: Inter !important;
+}
+
+.vjs-selected {
+    background-color: #772ce8 !important;
+}
+
+.vjs-current-time-display {
+    font-size: 1.3rem !important;
+}
+
+/*
+Quality selector CSS
+*/
+.vjs-quality-selector .vjs-menu-button {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%
+}
+
+.vjs-quality-selector .vjs-icon-placeholder {
+    font-family: 'VideoJS';
+    font-weight: normal;
+    font-style: normal
+}
+
+.vjs-quality-selector .vjs-icon-placeholder::before {
+    content: '\f110'
+}
+
+.vjs-quality-changing .vjs-big-play-button {
+    display: none
+}
+
+.vjs-quality-changing .vjs-control-bar {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    visibility: visible;
+    opacity: 1
 }

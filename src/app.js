@@ -17,8 +17,15 @@ chrome.storage.local.get(['chat_toggle'], function (result) {
     settings.chat.enabled = result.chat_toggle;
 });
 
-// On refresh
-$(window).on('load', checkSubOnlyVOD);
+// Need to inject libs for firefox
+if (isFirefox()) {
+    $(window).on('load', () => {
+        injectScript("src/scripts/video-7.20.2.min.js", () => {
+            injectScript("src/scripts/videojs-http-streaming-2.14.2.min.js", () => { });
+            injectScript("src/scripts/silvermine-videojs-quality-selector.min.js", () => { });
+        });
+    });
+}
 
 // Listen when a sub only VOD is found
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
@@ -69,7 +76,6 @@ function checkSubOnlyVOD() {
 
         if (checkSub != undefined) {
             console.log("[TwitchNoSub] Sub-only VOD found");
-
             // Replace sub only message with a loading gif
             checkSub.html('<img src="https://i.ibb.co/NTpWgM1/Rolling-1s-200px.gif" alt="Loading VOD">');
 
@@ -110,14 +116,18 @@ function retrieveVOD(className) {
     const vod_id = currentURL.split("/").pop();
 
     let seeked = false;
+    var player = null;
 
     fetchTwitchData(vod_id, (data) => {
-        // Insert the new video player
-        const contentStream = $("div[data-target='persistent-player-content']");
-        contentStream.html(`<video id="player" class="${className}" playsinline controls></video>`);
-
-        const video = document.querySelector('#player');
         const resolutions = data.resolutions;
+
+        const reversedResolutions = {};
+
+        // Reverse resolutions to show the highest quality first
+        const resEntries = Object.entries(resolutions);
+        for (let i = resEntries.length - 1; i >= 0; i--) {
+            reversedResolutions[resEntries[i][0]] = resEntries[i][1];
+        }
 
         console.log("[TwitchNoSub] Start retrieving VOD links");
         console.log("[TwitchNoSub] VOD resolutions : " + JSON.stringify(resolutions));
@@ -130,188 +140,227 @@ function retrieveVOD(className) {
         console.log("[TwitchNoSub] VOD ID : " + vodSpecialID);
         console.log("[TwitchNoSub] VOD type : " + data.broadcast_type);
 
-        let availableURLS = [];
+        let sources = "";
 
         if (data.broadcast_type == "highlight") {
-            availableURLS = Object.entries(resolutions).map(([resKey, resVal]) => {
-                return {
-                    "resolution": resVal,
-                    "fps": data.fps[resKey],
-                    "url": "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/highlight-" + vod_id + ".m3u8"
-                };
+            Object.entries(reversedResolutions).map(([resKey, _]) => {
+                let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/highlight-" + vod_id + ".m3u8";
+                sources += `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>`;
             });
         } else {
             // Default vod type archive
-            availableURLS = Object.entries(resolutions).map(([resKey, resVal]) => {
-                return {
-                    "resolution": resVal,
-                    "fps": data.fps[resKey],
-                    "url": "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8"
-                };
+            Object.entries(reversedResolutions).map(([resKey, _]) => {
+                let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8";
+                sources += `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>`;
             });
         }
 
-        const playlistString = createM3u8Playlist(availableURLS);
-        const encodedPlaylistString = new TextEncoder().encode(playlistString);
-        const blobUrl = URL.createObjectURL(new Blob([encodedPlaylistString]));
+        // Insert the new video player
+        const contentStream = $("div[data-target='persistent-player-content']");
+        contentStream.html(
+            `<div preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused 
+                  vjs-user-inactive ${className}" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player">
+                <video id="video" class="vjs-tech vjs-matrix" controls>
+                    ${sources}
+                </video>
+            </div>`
+        );
 
-        const hls = new Hls({
-            xhrSetup: (xhr, _url) => {
-                // Patch the m3u8 VOD file to be readable
-                xhr.open('GET', _url.replace('unmuted.ts', 'muted.ts'), true);
-            },
-        });
+        // Init the player
+        if (isFirefox()) {
 
-        hls.loadSource(blobUrl);
+            //Don't know why firefox only work with this
+            injectJavascriptCode(`window.twitch_player = videojs('video', {
+                playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                controlBar: {
+                    children: [
+                        'playToggle',
+                        'volumePanel',
+                        'progressControl',
+                        'currentTimeDisplay',
+                        'spacer',
+                        'PlaybackRateMenuButton',
+                        'qualitySelector',
+                        'fullscreenToggle',
+                    ],
+                }
+            });`);
 
-        // When m3u8 is parsed
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            const availableQualities = hls.levels.map((l) => l.height);
-
-            const player = new Plyr(video, {
-                invertTime: false,
-                quality: {
-                    default: availableQualities[0],
-                    options: availableQualities,
-                    forced: true,
-                    onChange: (quality) => updateQuality(quality, hls),
-                },
+            player = window.wrappedJSObject.twitch_player;
+        } else {
+            player = videojs('video', {
+                playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                controlBar: {
+                    children: [
+                        'playToggle',
+                        'volumePanel',
+                        'progressControl',
+                        'currentTimeDisplay',
+                        'spacer',
+                        'PlaybackRateMenuButton',
+                        'qualitySelector',
+                        'fullscreenToggle',
+                    ],
+                }
             });
+        }
 
-            hls.attachMedia(video);
+        const onPlayerReady = () => {
+            console.log("[TwitchNoSub] Player is ready");
 
-            player.play();
-
-            document.addEventListener('keydown', (event) => {
-                const name = event.key;
-
-                // Backward and forward with arrow keys
-                if (name == "ArrowLeft") {
-                    player.currentTime = player.currentTime - 5;
-                } else if (name == "ArrowRight") {
-                    player.currentTime = player.currentTime + 5;
-                }
-
-                if (name == " ") {
-                    event.preventDefault();
-
-                    if (player.paused) {
-                        player.play();
-                    } else {
-                        player.pause();
-                    }
-                }
-            }, false);
-
-            video.onloadedmetadata = () => {
-                // Fetch current VOD informations
-                settings.current_watch["title"] = $("h2[data-a-target='stream-title']").text();
-                settings.current_watch["id"] = vodSpecialID;
-                settings.current_watch["max_time"] = player.duration;
-
-                // Fetch current VOD time from background (local storage)
-                chrome.runtime.sendMessage({ type: "fetch_data", id: vodSpecialID }, function (response) {
-                    if (response.success) {
-
-                        settings.current_watch["time"] = response.data["time"];
-
-                        player.currentTime = settings.current_watch["time"];
-                    }
-                });
-
-                // Fetch current volume from local storage
-                const volume = window.localStorage.getItem("volume");
-
-                if (volume != undefined) {
-                    player.volume = volume;
-                }
-
-                // Save new volume in local storage
-                player.on('volumechange', () => {
-                    window.localStorage.setItem("volume", player.muted ? 0.0 : player.volume);
-                });
-
-                // Save new time in local storage
-                player.on('timeupdate', () => {
-                    settings.current_watch["time"] = player.currentTime;
-
-                    chrome.runtime.sendMessage({ type: "update", id: vodSpecialID, data: settings.current_watch }, function (response) { });
-                });
-
-                // User moved forward or backard in the VOD
-                player.on('seeked', () => {
-                    seeked = true;
-                });
-
-                // Support for time query in URL (?t=1h15m56s)
-                const params = (new URL(document.location)).searchParams;
-                const time = params.get("t");
-
-                if (time != undefined) {
-                    let final_time = 0;
-
-                    const first_split = time.split("h");
-                    let hours = parseInt(first_split[0]);
-                    const second_split = first_split[1].split("m");
-                    let minutes = parseInt(second_split[0]);
-                    let seconds = parseInt(second_split[1].replace("s", ""));
-
-                    final_time += (hours * 3600);
-                    final_time += (minutes * 60);
-                    final_time += seconds;
-
-                    player.currentTime = final_time;
-                }
-            };
-
-            // Chat
-            if (!settings.chat.enabled) {
-                return;
+            if (isFirefox() && player == undefined) {
+                player = window.wrappedJSObject.twitch_player;
             }
 
-            setTimeout(() => {
-                let index = 0;
+            console.log(player);
 
-                let messages = {
-                    comments: []
-                };
+            settings.current_watch["title"] = $("h2[data-a-target='stream-title']").text();
+            settings.current_watch["id"] = vodSpecialID;
+            settings.current_watch["max_time"] = player.currentTime() + player.remainingTime();
 
-                fetchChat(vod_id, player.currentTime, undefined).done(data => {
-                    messages = $.parseJSON(data);
-                });
+            // Fetch current VOD time from background (local storage)
+            chrome.runtime.sendMessage({ type: "fetch_data", id: vodSpecialID }, function (response) {
+                if (response.success) {
 
-                setInterval(() => {
-                    if (!player.paused && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
-                        if (seeked) {
-                            seeked = false;
+                    settings.current_watch["time"] = response.data["time"];
 
-                            // If seeked reset the current chat cursor
-                            fetchChat(vod_id, player.currentTime, undefined).done(data => {
-                                messages = $.parseJSON(data);
-                                index = 0;
-                            });
+                    player.currentTime(settings.current_watch["time"]);
+                }
+            });
 
-                            return;
-                        }
+            // Fetch current volume from local storage
+            const volume = window.localStorage.getItem("volume");
 
-                        if (messages.comments.length <= index) {
-                            fetchChat(vod_id, player.currentTime, messages._next).done(data => {
-                                messages = $.parseJSON(data);
-                                index = 0;
-                            });
-                        }
+            if (volume != undefined) {
+                player.volume(volume);
+            }
 
-                        messages.comments.forEach(comment => {
-                            if (comment.content_offset_seconds <= player.currentTime) {
-                                addMessage(comment);
-                                delete messages.comments[index];
-                                index++;
-                            }
+            // Support for time query in URL (?t=1h15m56s)
+            const params = (new URL(document.location)).searchParams;
+            const time = params.get("t");
+
+            if (time != undefined) {
+                let final_time = 0;
+
+                const first_split = time.split("h");
+                let hours = parseInt(first_split[0]);
+                const second_split = first_split[1].split("m");
+                let minutes = parseInt(second_split[0]);
+                let seconds = parseInt(second_split[1].replace("s", ""));
+
+                final_time += (hours * 3600);
+                final_time += (minutes * 60);
+                final_time += seconds;
+
+                player.currentTime(final_time);
+            }
+
+            /* Events doesn't work on firefox */
+
+            // Save new volume in local storage
+            player.on('volumechange', () => {
+                window.localStorage.setItem("volume", player.muted() ? 0.0 : player.volume());
+            });
+
+            // Save new time in local storage
+            player.on('timeupdate', () => {
+                settings.current_watch["time"] = player.currentTime();
+
+                chrome.runtime.sendMessage({ type: "update", id: vodSpecialID, data: settings.current_watch }, function (response) { });
+            });
+
+            // User moved forward or backard in the VOD
+            player.on('seeked', () => {
+                seeked = true;
+            });
+        };
+
+        isReady = setInterval(() => {
+            if (player.isReady_) {
+                clearInterval(isReady);
+                onPlayerReady();
+            }
+        }, 500);
+
+        // Add custom class on video player to have a perfect size on all screen
+        player.addClass('channel-page__video-player');
+
+        // Patch the m3u8 VOD file to be readable
+        videojs.Vhs.xhr.beforeRequest = function (options) {
+            options.uri = options.uri.replace('unmuted.ts', 'muted.ts');
+            return options;
+        };
+
+        player.play();
+
+        document.addEventListener('keydown', (event) => {
+            const name = event.key;
+
+            // Backward and forward with arrow keys
+            if (name == "ArrowLeft") {
+                player.currentTime(player.currentTime() - 5);
+            } else if (name == "ArrowRight") {
+                player.currentTime(player.currentTime() + 5);
+            }
+
+            if (name == " ") {
+                event.preventDefault();
+
+                if (player.paused()) {
+                    player.play();
+                } else {
+                    player.pause();
+                }
+            }
+        }, false);
+
+        // Chat
+        if (!settings.chat.enabled) {
+            return;
+        }
+
+        setTimeout(() => {
+            let index = 0;
+
+            let messages = {
+                comments: []
+            };
+
+            fetchChat(vod_id, player.currentTime(), undefined).done(data => {
+                messages = $.parseJSON(data);
+            });
+
+            setInterval(() => {
+                if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.chat.enabled) {
+                    if (seeked) {
+                        seeked = false;
+
+                        // If seeked reset the current chat cursor
+                        fetchChat(vod_id, player.currentTime(), undefined).done(data => {
+                            messages = $.parseJSON(data);
+                            index = 0;
+                        });
+
+                        return;
+                    }
+
+                    if (messages.comments.length <= index) {
+                        fetchChat(vod_id, player.currentTime(), messages._next).done(data => {
+                            messages = $.parseJSON(data);
+                            index = 0;
                         });
                     }
-                }, 1000);
-            }, 1200);
-        });
+
+                    messages.comments.forEach(comment => {
+                        if (comment.content_offset_seconds <= player.currentTime()) {
+                            addMessage(comment);
+                            delete messages.comments[index];
+                            index++;
+                        }
+                    });
+                }
+            }, 1000);
+        }, 1200);
     });
 }
 
@@ -332,28 +381,29 @@ function fetchTwitchData(vodID, success) {
     });
 }
 
-// Generate a m3u8 playlist with VODs url of all resolutions
-function createM3u8Playlist(urls) {
-    let stream = '';
-    urls.forEach((data, val) => {
-        stream += `#EXT-X-STREAM-INF:BANDWIDTH=${100 - val},RESOLUTION=${data.resolution},FRAME-RATE=${data.fps}\n`;
-        stream += `${data.url}\n`;
-    });
-    return '#EXTM3U\n' + stream;
-}
-
-// Fired when the quality is updated
-function updateQuality(quality, hlsInstance) {
-    hlsInstance.levels.forEach((level, idx) => {
-        if (level.height === quality) {
-            hlsInstance.currentLevel = idx;
-        }
-    });
-};
-
 // Refresh current page on click to remove the extension player
 function onClick() {
     setTimeout(() => {
         document.location.reload();
     }, 200);
+}
+
+function isFirefox() {
+    return window.navigator.userAgent.includes("Firefox");
+}
+
+function injectScript(path, callback) {
+    var s = document.createElement('script');
+    s.src = chrome.runtime.getURL(path);
+    s.onload = () => {
+        callback();
+    };
+    (document.head || document.documentElement).appendChild(s);
+}
+
+function injectJavascriptCode(code) {
+    var s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.text = code;
+    (document.head || document.documentElement).appendChild(s);
 }

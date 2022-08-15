@@ -1,6 +1,6 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.4",
+    "version": "0.5",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 3,
     "icons": {
@@ -29,13 +29,14 @@
             ],
             "js": [
                 "src/scripts/jquery-3.6.0.min.js",
-                "src/scripts/plyr-polyfilled-3.7.2.js",
-                "src/scripts/hls-1.1.5.min.js",
+                "src/scripts/video-7.20.2.min.js",
+                "src/scripts/videojs-http-streaming-2.14.2.min.js",
+                "src/scripts/silvermine-videojs-quality-selector.min.js",
                 "src/chat.js",
                 "src/app.js"
             ],
             "css": [
-                "src/style/plyr-3.7.2.css",
+                "src/style/video-js-7.20.2.min.css",
                 "src/style/custom.css",
                 "src/style/chat.css"
             ]

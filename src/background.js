@@ -66,14 +66,14 @@ chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     return true;
 });
 
-// Save changes into local storage every 1.2 seconds
+// Save changes into local storage every 3 seconds
 setInterval(() => {
     if (updated) {
         chrome.storage.local.set({ "tns_watching_list": watch_list }, () => {
             updated = false;
         });
     }
-}, 1200);
+}, 3000);
 
 // On update in tabs
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
