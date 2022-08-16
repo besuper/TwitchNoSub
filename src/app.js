@@ -1,5 +1,10 @@
 const settings = {
-    user: {},
+    user: {
+        chat: {
+            enabled: false,
+        },
+        thumbnail_preview: false,
+    },
     current_watch: {
         "id": "",
         "link": "",
