@@ -65,6 +65,32 @@ Custom player CSS
 }
 
 /*
+Thumbnail
+*/
+.vjs-thumbnail {
+    margin-top: -5px;
+}
+
+.vjs-thumbnail-wraper {
+    position: absolute;
+    top: -100px;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 7px;
+    margin: 0;
+    padding: 0;
+    background-color: rgba(1, 1, 1, 0.658);
+}
+
+.vjs-thumbnail-time {
+    color: white;
+    display: flex;
+    justify-content: center;
+    padding-top: 5px;
+}
+
+/*
 Quality selector CSS
 */
 .vjs-quality-selector .vjs-menu-button {

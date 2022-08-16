@@ -20,8 +20,13 @@
 
     <hr>
 
-    <label for="chat_toggle" class="toggle">Chat replay</label>
-    <input type="checkbox" id="chat_toggle" class="checkbox" />
+    <label class="toggle">Chat replay</label>
+    <input type="checkbox" class="checkbox" data-update="chat.enabled" />
+
+    <br>
+
+    <label class="toggle">Preview thumbnails</label>
+    <input type="checkbox" class="checkbox" data-update="thumbnail_preview" />
 
     <script src="popup.js"></script>
 </body>

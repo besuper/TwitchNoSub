@@ -2,19 +2,46 @@ const settings = {
     user: {
         chat: {
             enabled: false,
-        }
+        },
+        thumbnail_preview: false,
     }
 };
 
-const chat_toggle_box = document.getElementById("chat_toggle");
+const toggles = document.querySelectorAll(".checkbox");
 
-chrome.storage.local.get(['user_settings'], function (result) {
+chrome.storage.local.get(['user_settings'], (result) => {
+    console.log("Load!");
+    console.log(result);
+
     settings.user = JSON.parse(result.user_settings);
-    chat_toggle_box.checked = settings.user.chat.enabled;
+
+    toggles.forEach(toggle => {
+        let update = toggle.getAttribute("data-update");
+        if (update.includes(".")) {
+            let split = update.split(".");
+            // TODO: change this
+            toggle.checked = settings.user[split[0]][split[1]];
+        } else {
+            toggle.checked = settings.user[update];
+        }
+    });
 });
 
-chat_toggle_box.onchange = () => {
-    chrome.storage.local.set({ "user_settings": JSON.stringify(settings.user) }, function () {
-        console.log('Updated user settings');
-    });
-}
+toggles.forEach(toggle => {
+    toggle.onchange = () => {
+        let update = toggle.getAttribute("data-update");
+        if (update.includes(".")) {
+            let split = update.split(".");
+            // TODO: change this
+            settings.user[split[0]][split[1]] = toggle.checked;
+        } else {
+            settings.user[update] = toggle.checked;
+        }
+
+        const data = JSON.stringify(settings.user);
+
+        chrome.storage.local.set({ "user_settings": data }, () => {
+            console.log('Updated user settings');
+        });
+    }
+});

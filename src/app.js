@@ -1,9 +1,5 @@
 const settings = {
-    user: {
-        chat: {
-            enabled: false,
-        }
-    },
+    user: {},
     current_watch: {
         "id": "",
         "link": "",
@@ -17,7 +13,9 @@ let vodSetup = false;
 
 // Fetch user settings
 chrome.storage.local.get(['user_settings'], function (result) {
-    settings.user = JSON.parse(result.user_settings);
+    if (result.user_settings != undefined) {
+        settings.user = JSON.parse(result.user_settings);
+    }
 });
 
 // Need to inject libs for firefox
@@ -147,6 +145,7 @@ function retrieveVOD(className) {
             // Default vod type archive
             Object.entries(resolutions).map(([resKey, _]) => {
                 let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8";
+                console.log(url);
                 sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
             });
         }
@@ -196,6 +195,7 @@ function retrieveVOD(className) {
                         'PlaybackRateMenuButton',
                         'qualitySelector',
                         'fullscreenToggle',
+                        'thumbnail',
                     ],
                 }
             });
@@ -209,6 +209,13 @@ function retrieveVOD(className) {
             }
 
             console.log(player);
+            console.log("Duration : " + player.duration());
+
+            player.play();
+
+            if (settings.user.thumbnail_preview) {
+                setupThumbnails(player, "https://" + domain + "/" + vodSpecialID + "/storyboards/" + vod_id + "-low-0.jpg");
+            }
 
             settings.current_watch["title"] = $("h2[data-a-target='stream-title']").text();
             settings.current_watch["id"] = vodSpecialID;
@@ -287,7 +294,7 @@ function retrieveVOD(className) {
             return options;
         };
 
-        player.play();
+        //player.play();
 
         document.addEventListener('keydown', (event) => {
             const name = event.key;
