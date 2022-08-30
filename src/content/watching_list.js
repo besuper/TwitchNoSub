@@ -22,7 +22,6 @@ setTimeout(() => {
             console.log("Len : " + watch_list.length);
 
             for (const [id, vod] of Object.entries(watch_list)) {
-                const author = id.split("_")[1];
                 const title = vod["title"];
                 const formatted_title = title.length > 38 ? title.substring(0, 38) + "..." : title;
 
@@ -34,7 +33,7 @@ setTimeout(() => {
                 <div class="information">
                     <div class="title" title="${title}">${formatted_title}</div>
                     <div class="meta">
-                        <div class="channel_name">Channel: ${author}</div>
+                        <div class="channel_name">Channel: ${vod["channel"]}</div>
                     </div>
                 </div>
                 <div class="utilities">

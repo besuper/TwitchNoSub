@@ -9,6 +9,7 @@ const settings = {
         "id": "",
         "link": "",
         "title": "",
+        "channel": "",
         "time": 0.0,
         "max_time": 0.0
     }
@@ -134,25 +135,36 @@ function retrieveVOD(className) {
         const currentURL = new URL(data.animated_preview_url);
 
         const domain = currentURL.host;
-        const vodSpecialID = currentURL.pathname.split("/")[1];
+        const paths = currentURL.pathname.split("/");
+        const vodSpecialID = paths[paths.findIndex(element => element.includes("storyboards")) - 1];
 
         console.log("[TwitchNoSub] VOD ID : " + vodSpecialID);
         console.log("[TwitchNoSub] VOD type : " + data.broadcast_type);
 
         let sources = "";
 
-        if (data.broadcast_type == "highlight") {
-            Object.entries(resolutions).map(([resKey, _]) => {
-                let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/highlight-" + vod_id + ".m3u8";
-                sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
-            });
-        } else {
-            // Default vod type archive
-            Object.entries(resolutions).map(([resKey, _]) => {
-                let url = "https://" + domain + "/" + vodSpecialID + "/" + resKey + "/index-dvr.m3u8";
-                console.log(url);
-                sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
-            });
+        switch (data.broadcast_type) {
+            case "highlight":
+                Object.entries(resolutions).map(([resKey, _]) => {
+                    let url = `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vod_id}.m3u8`;
+                    sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
+                });
+
+                break;
+            case "upload":
+                Object.entries(resolutions).map(([resKey, _]) => {
+                    let url = `https://${domain}/${data.channel.name}/${vod_id}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
+                    //TODO: Select the default quality in a better way
+                    sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" || resKey == "1080p60" ? `selected="true"` : ""}>` + sources;
+                });
+
+                break;
+            default:// Default vod type archive
+                Object.entries(resolutions).map(([resKey, _]) => {
+                    let url = `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
+                    sources = `<source src="${url}" type="application/x-mpegURL" id="vod" label="${resKey == "chunked" ? "Source" : resKey}" ${resKey == "chunked" ? `selected="true"` : ""}>` + sources;
+                });
+                break;
         }
 
         // Insert the new video player
@@ -219,10 +231,15 @@ function retrieveVOD(className) {
             player.play();
 
             if (settings.user.thumbnail_preview) {
-                setupThumbnails(player, "https://" + domain + "/" + vodSpecialID + "/storyboards/" + vod_id + "-low-0.jpg");
+                try {
+                    setupThumbnails(player, "https://" + domain + "/" + vodSpecialID + "/storyboards/" + vod_id + "-low-0.jpg");
+                } catch (e) {
+                    console.log(e);
+                }
             }
 
             settings.current_watch["title"] = $("h2[data-a-target='stream-title']").text();
+            settings.current_watch["channel"] = data.channel.name;
             settings.current_watch["id"] = vodSpecialID;
             settings.current_watch["max_time"] = player.currentTime() + player.remainingTime();
 
@@ -323,7 +340,7 @@ function retrieveVOD(className) {
         }, false);
 
         // Chat
-        if (!settings.user.chat.enabled) {
+        if (!settings.user.chat.enabled && data.broadcast_type == "upload") {
             return;
         }
 
