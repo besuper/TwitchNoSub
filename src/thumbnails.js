@@ -17,52 +17,54 @@ function setupThumbnails(player, sprites) {
         console.log("Maximum vod time : " + maxTime);
         console.log("Frame every seconds : " + frameEverySeconds);
 
-        const controlBar = $(".vjs-control-bar");
+        const controlBar = document.querySelector(".vjs-control-bar");
 
-        controlBar.append(`
-        <div class="vjs-thumbnail-wraper">
-            <div class="vjs-thumbnail"></div>
-            <div class="vjs-thumbnail-time"></div>
-        </div>
-        `);
+        const wrapper = document.createElement("div");
+        wrapper.className = "vjs-thumbnail-wraper";
 
-        const thumb = controlBar.find('.vjs-thumbnail');
-        const thumbTime = controlBar.find('.vjs-thumbnail-time');
-        const wrapper = controlBar.find('.vjs-thumbnail-wraper');
+        const thumb = document.createElement("div");
+        thumb.className = "vjs-thumbnail";
 
-        controlBar.on("mousemove", '.vjs-progress-control', () => {
-            wrapper.css("display", "flex");
+        const thumbTime = document.createElement("div");
+        thumbTime.className = "vjs-thumbnail-time";
 
-            var currentTime = $('.vjs-mouse-display .vjs-time-tooltip').text();
+        wrapper.appendChild(thumb);
+        wrapper.appendChild(thumbTime);
+
+        controlBar.appendChild(wrapper);
+
+        const thumbStyle = thumb.style;
+        const wrapperStyle = wrapper.style;
+
+        controlBar.addEventListener("mousemove", () => {
+            wrapper.style.display = "flex";
+
+            var currentTime = document.querySelector('.vjs-mouse-display .vjs-time-tooltip').textContent;
             var splitTime = currentTime.split(":");
 
-            thumbTime.text(currentTime);
+            thumbTime.textContent = currentTime;
 
             currentTime = (+splitTime[0]) * 60 * 60 + (+splitTime[1]) * 60 + (+splitTime[2]);
 
-            const position = controlBar.find('.vjs-progress-control .vjs-mouse-display').position();
+            const position = controlBar.querySelector('.vjs-progress-control .vjs-mouse-display');
             const time = Math.floor(currentTime / frameEverySeconds);
 
             const fetchRow = Math.floor(time / rowSize);
             const fetchFrame = time % rowSize;
 
-            thumb.css({
-                "background-image": `url(${sprites})`,
-                "width": widthThumb + "px",
-                "height": heightThumb + "px",
-                "background-position-x": `-${fetchFrame * widthThumb}px`,
-                "background-position-y": `-${fetchRow * heightThumb}px`
-            });
+            thumbStyle.backgroundImage = `url(${sprites})`;
+            thumbStyle.width = widthThumb + "px";
+            thumbStyle.height = heightThumb + "px";
+            thumbStyle.backgroundPositionX = `-${fetchFrame * widthThumb}px`;
+            thumbStyle.backgroundPositionY = `-${fetchRow * heightThumb}px`;
 
-            wrapper.css({
-                "left": (position.left - 30) + 'px',
-                "width": widthThumb + 'px',
-                "height": (heightThumb + 20) + 'px'
-            });
+            wrapperStyle.left = (position.offsetLeft - 30) + 'px';
+            wrapperStyle.width = widthThumb + 'px';
+            wrapperStyle.height = (heightThumb + 20) + 'px';
         });
 
-        controlBar.on('mouseout', '.vjs-progress-control', () => {
-            wrapper.css("display", "none");
+        controlBar.addEventListener('mouseout', () => {
+            wrapperStyle.display = "none";
         });
 
     };

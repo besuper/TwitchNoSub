@@ -14,22 +14,6 @@ chrome.storage.local.get(['tns_watching_list'], function (result) {
 
 // Add listener to all messages
 chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
-
-    // When watching a VOD the extension is sending update_time to keep the correct current VOD time
-    if (request.type === "update_time") {
-        const data = request.data;
-
-        watch_list[data["id"]] = {
-            "link": data["link"],
-            "title": data["title"],
-            "time": data["time"],
-            "max_time": data["max_time"],
-        };
-
-        sendResponse({ success: true });
-        return true;
-    }
-
     // Feth a specific data with ID
     if (request.type === "fetch_data") {
         if (watch_list.hasOwnProperty(request.id)) {

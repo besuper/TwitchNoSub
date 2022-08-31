@@ -26,12 +26,12 @@ chrome.storage.local.get(['user_settings'], function (result) {
 
 // Need to inject libs for firefox
 if (isFirefox()) {
-    $(window).on('load', () => {
+    window.onload = () => {
         injectScript("src/scripts/video-7.20.2.min.js", () => {
             injectScript("src/scripts/videojs-http-streaming-2.14.2.min.js", () => { });
             injectScript("src/scripts/silvermine-videojs-quality-selector.min.js", () => { });
         });
-    });
+    }
 }
 
 // Listen when a sub only VOD is found
@@ -64,30 +64,30 @@ function checkSubOnlyVOD() {
 
     setTimeout(() => {
         // Check if the page contains Sub only VOD message
-        let checkSub = $("div[data-a-target='player-overlay-content-gate']");
+        let checkSub = document.querySelector("div[data-a-target='player-overlay-content-gate']");
 
         // If we don't find VOD
-        if (!checkSub.length) {
+        if (!checkSub) {
             checkSub = undefined;
 
             // Some twitch VODs are just black ?
-            checkSub = $("span[data-test-selector='seekbar-segment__segment']");
+            checkSub = document.querySelector("span[data-test-selector='seekbar-segment__segment']");
 
-            if (checkSub.length) {
+            if (checkSub) {
                 console.log("[TwitchNoSub] This is not a sub-only VOD");
 
                 checkSub = undefined;
             }
         }
 
-        if (checkSub != undefined) {
+        if (checkSub) {
             console.log("[TwitchNoSub] Sub-only VOD found");
             // Replace sub only message with a loading gif
-            checkSub.html('<img src="https://i.ibb.co/NTpWgM1/Rolling-1s-200px.gif" alt="Loading VOD">');
+            checkSub.innerHTML = '<img src="https://i.ibb.co/NTpWgM1/Rolling-1s-200px.gif" alt="Loading VOD">';
 
             // Get the current twitch player
-            const video = $("div[class*=persistent-player]");
-            const className = video.attr("class");
+            const video = document.querySelector("div[class*=persistent-player]");
+            const className = video.className;
 
             console.log("" + className);
 
@@ -100,10 +100,14 @@ function checkSubOnlyVOD() {
                 video.remove();
 
                 // Add on click event on every left tab channels
-                $("a[data-test-selector*='followed-channel']").click(onClick);
+                document.querySelectorAll("a[data-test-selector*='followed-channel']").forEach(element => {
+                    element.addEventListener("click", onClick);
+                });
 
                 // Add on click event on every vods
-                $("img[src*='vods/']").click(onClick);
+                document.querySelectorAll("img[src*='vods/']").forEach(element => {
+                    element.addEventListener("click", onClick);
+                });
 
                 retrieveVOD(className);
             }, 1000);
@@ -168,15 +172,14 @@ function retrieveVOD(className) {
         }
 
         // Insert the new video player
-        const contentStream = $("div[data-target='persistent-player-content']");
-        contentStream.html(
+        const contentStream = document.querySelector("div[data-target='persistent-player-content']");
+        contentStream.innerHTML =
             `<div preload="auto" class="video-js vjs-16-9 vjs-big-play-centered vjs-controls-enabled vjs-workinghover vjs-v7 player-dimensions vjs-has-started vjs-paused 
                   vjs-user-inactive ${className}" id="player" tabindex="-1" lang="en" role="region" aria-label="Video Player">
                 <video id="video" class="vjs-tech vjs-matrix" controls>
                     ${sources}
                 </video>
-            </div>`
-        );
+            </div>`;
 
         // Init the player
         if (isFirefox()) {
@@ -238,7 +241,7 @@ function retrieveVOD(className) {
                 }
             }
 
-            settings.current_watch["title"] = $("h2[data-a-target='stream-title']").text();
+            settings.current_watch["title"] = data.title;
             settings.current_watch["channel"] = data.channel.name;
             settings.current_watch["id"] = vodSpecialID;
             settings.current_watch["max_time"] = player.currentTime() + player.remainingTime();
@@ -344,36 +347,30 @@ function retrieveVOD(className) {
             return;
         }
 
-        setTimeout(() => {
+        setTimeout(async () => {
             let index = 0;
 
             let messages = {
                 comments: []
             };
 
-            fetchChat(vod_id, player.currentTime(), undefined).done(data => {
-                messages = $.parseJSON(data);
-            });
+            messages = await fetchChat(vod_id, player.currentTime(), undefined);
 
-            setInterval(() => {
+            setInterval(async () => {
                 if (!player.paused() && (messages != undefined && messages.comments.length > 0) && settings.user.chat.enabled) {
                     if (seeked) {
                         seeked = false;
 
                         // If seeked reset the current chat cursor
-                        fetchChat(vod_id, player.currentTime(), undefined).done(data => {
-                            messages = $.parseJSON(data);
-                            index = 0;
-                        });
+                        messages = await fetchChat(vod_id, player.currentTime(), undefined);
+                        index = 0;
 
                         return;
                     }
 
                     if (messages.comments.length <= index) {
-                        fetchChat(vod_id, player.currentTime(), messages._next).done(data => {
-                            messages = $.parseJSON(data);
-                            index = 0;
-                        });
+                        messages = await fetchChat(vod_id, player.currentTime(), messages._next);
+                        index = 0;
                     }
 
                     messages.comments.forEach(comment => {
@@ -391,19 +388,13 @@ function retrieveVOD(className) {
 
 // Fetch data from Twitch API for the VOD
 function fetchTwitchData(vodID, success) {
-    $.ajax({
-        url: "https://api.twitch.tv/kraken/videos/" + vodID,
+    fetch("https://api.twitch.tv/kraken/videos/" + vodID, {
+        method: 'GET',
         headers: {
-            "Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-            "Accept": "application/vnd.twitchtv.v5+json"
-        },
-        type: 'GET',
-        dataType: 'json',
-        async: true,
-        success: function (data, statut) {
-            success(data);
+            'Client-Id': 'kimne78kx3ncx6brgo4mv6wki5h1ko',
+            'Accept': 'application/vnd.twitchtv.v5+json'
         }
-    });
+    }).then(response => response.json()).then(data => { success(data); });
 }
 
 // Refresh current page on click to remove the extension player
