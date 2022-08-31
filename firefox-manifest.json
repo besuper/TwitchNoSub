@@ -8,7 +8,6 @@
     },
     "web_accessible_resources": [
         "src/scripts/video-7.20.2.min.js",
-        "src/scripts/videojs-http-streaming-2.14.2.min.js",
         "src/scripts/silvermine-videojs-quality-selector.min.js"
     ],
     "browser_action": {
@@ -30,14 +29,14 @@
     ],
     "content_scripts": [
         {
-            "run_at": "document_start",
+            "run_at": "document_end",
             "matches": [
                 "https://www.twitch.tv/*"
             ],
             "js": [
-                "src/scripts/video-7.20.2.min.js",
-                "src/scripts/videojs-http-streaming-2.14.2.min.js",
                 "src/chat.js",
+                "src/thumbnails.js",
+                "src/media.js",
                 "src/app.js"
             ],
             "css": [
