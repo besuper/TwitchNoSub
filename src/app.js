@@ -111,7 +111,7 @@ function checkSubOnlyVOD() {
                 retrieveVOD(className);
             }, 1000);
         }
-    }, 5500);
+    }, 1500);
 }
 
 function retrieveVOD(className) {
