@@ -273,7 +273,7 @@ function retrieveVOD(className) {
         if (isFirefox()) {
             //Don't know why firefox only work with this
             window.eval(`
-                videojs.Vhs.xhr.beforeRequest = function (options) {
+                videojs.Hls.xhr.beforeRequest = function (options) {
                     options.uri = options.uri.replace('unmuted.ts', 'muted.ts');
                     return options;
                 };
@@ -305,7 +305,7 @@ function retrieveVOD(className) {
             });
         } else {
             // Patch the m3u8 VOD file to be readable
-            videojs.Vhs.xhr.beforeRequest = function (options) {
+            videojs.Hls.xhr.beforeRequest = function (options) {
                 options.uri = options.uri.replace('unmuted.ts', 'muted.ts');
                 return options;
             };
