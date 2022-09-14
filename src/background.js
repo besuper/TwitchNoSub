@@ -59,28 +59,14 @@ setInterval(() => {
     }
 }, 3000);
 
-// On update in tabs
-chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
-    // If the link changed and contains specific VOD url
-    if (details.transitionType === "link" && (details.url.includes("/videos/") || details.url.includes("/video/"))) {
-        const key = details.tabId + "";
 
-        // Don't send message twice cause event is fired twice
-        if (key in loaded_vod) {
-            delete loaded_vod[key];
-            return;
-        }
-
-        loaded_vod[key] = true;
-
-        // Send to the app script that the user is on a VOD
+// Listen to usher.ttvnw.net request (request acces to a VOD)
+chrome.webRequest.onCompleted.addListener(data => {
+    // If the request failed it means the VOD is sub-only
+    if (data.url.includes("https://usher.ttvnw.net/vod/") && data.statusCode == 403) {
         setTimeout(() => {
-            chrome.tabs.sendMessage(details.tabId, { type: "load_vod" }, function () {
-                if (key in loaded_vod) {
-                    delete loaded_vod[key];
-                }
-            });
-        }, 1200);
+            chrome.tabs.sendMessage(data.tabId, { type: "load_vod" }, function () { });
+        }, 300);
     }
 
-}, { url: [{ urlMatches: 'https?://(www\\.)?twitch\\.tv/.*' }] });
+}, { urls: ["https://usher.ttvnw.net/*"] }, ["responseHeaders"]);

@@ -13,17 +13,18 @@
         "service_worker": "src/background.js"
     },
     "host_permissions": [
-        "https://www.twitch.tv/*"
+        "https://www.twitch.tv/*",
+        "https://usher.ttvnw.net/*"
     ],
     "permissions": [
         "storage",
         "activeTab",
         "tabs",
-        "webNavigation"
+        "webRequest"
     ],
     "content_scripts": [
         {
-            "run_at": "document_end",
+            "run_at": "document_start",
             "matches": [
                 "https://www.twitch.tv/*"
             ],
