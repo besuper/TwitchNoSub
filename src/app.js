@@ -70,12 +70,16 @@ function checkSubOnlyVOD() {
             checkSub = undefined;
 
             // Some twitch VODs are just black ?
+            // Check if there is a seek bar
             checkSub = document.querySelector("span[data-test-selector='seekbar-segment__segment']");
 
             if (checkSub) {
                 console.log("[TwitchNoSub] This is not a sub-only VOD");
 
                 checkSub = undefined;
+            } else {
+                // There is no seek bar, this is a sub-only VOD
+                checkSub = document.querySelector(".persistent-player");
             }
         }
 
