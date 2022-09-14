@@ -24,12 +24,14 @@
         "activeTab",
         "tabs",
         "webNavigation",
+        "webRequest",
         "https://*.twitch.tv/*",
-        "https://*.cloudfront.net/*"
+        "https://*.cloudfront.net/*",
+        "https://usher.ttvnw.net/*"
     ],
     "content_scripts": [
         {
-            "run_at": "document_end",
+            "run_at": "document_start",
             "matches": [
                 "https://www.twitch.tv/*"
             ],
