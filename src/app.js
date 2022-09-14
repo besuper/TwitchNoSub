@@ -271,6 +271,13 @@ function retrieveVOD(className) {
             player.on('seeked', () => {
                 seeked = true;
             });
+
+            if (isFirefox()) {
+                // Fix full screen max height
+                document.querySelectorAll(".channel-page__video-player").forEach(p => {
+                    p.setAttribute("style", "max-height: 100vh !important");
+                });
+            }
         };
 
         // Init the player
@@ -366,7 +373,7 @@ function retrieveVOD(className) {
         }, false);
 
         // Chat
-        if (!settings.user.chat.enabled && data.broadcast_type == "upload") {
+        if (!settings.user.chat.enabled || data.broadcast_type == "upload") {
             return;
         }
 
