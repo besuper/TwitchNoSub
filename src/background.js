@@ -70,3 +70,10 @@ chrome.webRequest.onCompleted.addListener(data => {
     }
 
 }, { urls: ["https://usher.ttvnw.net/*"] }, ["responseHeaders"]);
+
+// Make background wake up
+chrome.webNavigation.onBeforeNavigate.addListener(function () {
+
+}, {
+    url: [{ hostContains: "twitch" }]
+});
