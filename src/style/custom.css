@@ -121,3 +121,10 @@ Quality selector CSS
     visibility: visible;
     opacity: 1
 }
+
+/*Firefox fix to control-bar which would dissapear depending on the aspect-ratio */
+@-moz-document url-prefix() {
+    .vjs-tech {
+      max-height: calc(100vh - 16rem);
+    }
+  }
