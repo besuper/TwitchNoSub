@@ -10,6 +10,17 @@ async function fetchTwitchData(vodID) {
     return resp.json();
 }
 
+function createServingID() {
+    const w = "0123456789abcdefghijklmnopqrstuvwxyz".split("");
+    let id = "";
+
+    for (let i = 0; i < 32; i++) {
+        id += w[Math.floor(Math.random() * w.length)];
+    }
+
+    return id;
+}
+
 const oldFetch = self.fetch;
 
 self.fetch = async function (url, opt) {
@@ -48,7 +59,7 @@ self.fetch = async function (url, opt) {
             const paths = currentURL.pathname.split("/");
             const vodSpecialID = paths[paths.findIndex(element => element.includes("storyboards")) - 1];
 
-            const userSettings = { "ip": "94.105.54.48", "servingId": "cef468eeda569cc1b16b45fd53200b9c" };
+            const userSettings = { "ip": "127.0.0.1", "servingId": createServingID() };
 
             let fakePlaylist = `#EXTM3U
 #EXT-X-TWITCH-INFO:ORIGIN="s3",B="false",REGION="EU",USER-IP="${userSettings.ip}",SERVING-ID="${userSettings.servingId}",CLUSTER="cloudfront_vod",USER-COUNTRY="BE",MANIFEST-CLUSTER="cloudfront_vod"`;
