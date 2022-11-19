@@ -1,18 +1,14 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.5.1",
+    "version": "0.6",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 2,
     "icons": {
         "128": "assets/icons/icon.png"
     },
     "web_accessible_resources": [
-        "src/scripts/video-7.20.2.min.js",
-        "src/scripts/silvermine-videojs-quality-selector.min.js"
+        "src/patched-amazon.js"
     ],
-    "browser_action": {
-        "default_popup": "src/content/watching_list.html"
-    },
     "background": {
         "scripts": [
             "src/background.js"
@@ -20,33 +16,13 @@
         "persistent": true
     },
     "permissions": [
-        "storage",
         "activeTab",
         "tabs",
         "webNavigation",
         "webRequest",
+        "webRequestBlocking",
         "https://*.twitch.tv/*",
-        "https://*.cloudfront.net/*",
-        "https://usher.ttvnw.net/*"
-    ],
-    "content_scripts": [
-        {
-            "run_at": "document_start",
-            "matches": [
-                "https://www.twitch.tv/*"
-            ],
-            "js": [
-                "src/chat.js",
-                "src/thumbnails.js",
-                "src/media.js",
-                "src/app.js"
-            ],
-            "css": [
-                "src/style/video-js-7.20.2.min.css",
-                "src/style/custom.css",
-                "src/style/chat.css"
-            ]
-        }
+        "https://static.twitchcdn.net/assets/*"
     ],
     "browser_specific_settings": {
         "gecko": {
