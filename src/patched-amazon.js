@@ -26,6 +26,13 @@ const oldFetch = self.fetch;
 self.fetch = async function (url, opt) {
     let response = await oldFetch(url, opt);
 
+    // Patch playlist from unmuted to muted segments
+    if (url.includes("cloudfront") && url.includes(".m3u8")) {
+        const body = await response.text();
+
+        return new Response(body.replace(/-unmuted/g, "-muted"), { status: 200 });
+    }
+
     if (url.startsWith("https://usher.ttvnw.net/vod/")) {
         if (response.status != 200) {
             const vodId = url.split("https://usher.ttvnw.net/vod/")[1].split(".m3u8")[0];
@@ -36,9 +43,6 @@ self.fetch = async function (url, opt) {
                     resolve(new Response("Unable to fetch twitch data API", 403));
                 });
             }
-
-            // Muted segement are not supported for now
-            const isMuted = data.muted_segments != undefined && data.muted_segments.length > 0;
 
             let resolutions = data.resolutions;
 
@@ -68,14 +72,8 @@ self.fetch = async function (url, opt) {
             switch (data.broadcast_type) {
                 case "highlight":
                     for ([resKey, resValue] of Object.entries(resolutions)) {
-                        let link = `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`;
-
-                        /*if (isMuted) {
-                            link = await patchUnmutedPlaylist(`https://${domain}/${vodSpecialID}/${resKey}/`, link, vodSpecialID, resKey);
-                        }*/
-
                         sources_.push({
-                            src: link,
+                            src: `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`,
                             quality: resKey,
                             resolution: resValue,
                             fps: Math.ceil(data.fps[resKey]),
@@ -86,14 +84,8 @@ self.fetch = async function (url, opt) {
                     break;
                 case "upload":
                     for ([resKey, resValue] of Object.entries(resolutions)) {
-                        let link = `https://${domain}/${data.channel.name}/${vodId}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
-
-                        /*if (isMuted) {
-                            link = await patchUnmutedPlaylist(`https://${domain}/${data.channel.name}/${vodId}/${vodSpecialID}/${resKey}/`, link, vodSpecialID, resKey);
-                        }*/
-
                         sources_.push({
-                            src: link,
+                            src: `https://${domain}/${data.channel.name}/${vodId}/${vodSpecialID}/${resKey}/index-dvr.m3u8`,
                             quality: resKey,
                             resolution: resValue,
                             fps: Math.ceil(data.fps[resKey]),
@@ -104,14 +96,8 @@ self.fetch = async function (url, opt) {
                     break;
                 default:
                     for ([resKey, resValue] of Object.entries(resolutions)) {
-                        let link = `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
-
-                        /*if (isMuted) {
-                            link = await patchUnmutedPlaylist(`https://${domain}/${vodSpecialID}/${resKey}/`, link, vodSpecialID, resKey);
-                        }*/
-
                         sources_.push({
-                            src: link,
+                            src: `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`,
                             quality: resKey,
                             resolution: resValue,
                             fps: Math.ceil(data.fps[resKey]),
