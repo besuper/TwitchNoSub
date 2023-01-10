@@ -1,13 +1,14 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 2,
     "icons": {
         "128": "assets/icons/icon.png"
     },
     "web_accessible_resources": [
-        "src/patched-amazon.js"
+        "src/amazon-ivs-wasmworker.min.js",
+        "src/amazon-ivs-wasmworker.min.wasm"
     ],
     "background": {
         "scripts": [

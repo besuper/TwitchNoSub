@@ -7,7 +7,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(function () {
 
 var isChrome = chrome.declarativeNetRequest != undefined;
 
-// Patching amazon service worker (75a2c99f45ecb5aa3225)
+// Patching amazon service worker
 if (isChrome) {
     // declarativeNetRequest only available on chrome
     chrome.declarativeNetRequest.updateDynamicRules({
@@ -17,14 +17,27 @@ if (isChrome) {
             'action': {
                 'type': 'redirect',
                 'redirect': {
-                    url: chrome.runtime.getURL("src/patched-amazon.js")
+                    url: chrome.runtime.getURL("src/amazon-ivs-wasmworker.min.js")
                 }
             },
             'condition': {
                 'urlFilter': 'https://static.twitchcdn.net/assets/amazon-ivs-wasmworker.min-*.js',
             }
+        },
+        {
+            'id': 1002,
+            'priority': 1,
+            'action': {
+                'type': 'redirect',
+                'redirect': {
+                    url: chrome.runtime.getURL("src/amazon-ivs-wasmworker.min.wasm")
+                }
+            },
+            'condition': {
+                'urlFilter': 'https://static.twitchcdn.net/assets/amazon-ivs-wasmworker.min-*.wasm',
+            }
         }],
-        removeRuleIds: [1001]
+        removeRuleIds: [1001, 1002]
     })
 } else {
     // Support firefox here
