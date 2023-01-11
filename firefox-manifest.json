@@ -7,8 +7,7 @@
         "128": "assets/icons/icon.png"
     },
     "web_accessible_resources": [
-        "src/amazon-ivs-wasmworker.min.js",
-        "src/amazon-ivs-wasmworker.min.wasm"
+        "src/amazon-ivs-worker.min.js"
     ],
     "background": {
         "scripts": [

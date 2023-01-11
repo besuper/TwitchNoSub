@@ -9,8 +9,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "src/amazon-ivs-wasmworker.min.js",
-                "src/amazon-ivs-wasmworker.min.wasm"
+                "src/amazon-ivs-worker.min.js"
             ],
             "matches": [
                 "https://www.twitch.tv/*"
