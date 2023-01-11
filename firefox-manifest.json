@@ -22,7 +22,8 @@
         "webRequest",
         "webRequestBlocking",
         "https://*.twitch.tv/*",
-        "https://static.twitchcdn.net/assets/*"
+        "https://static.twitchcdn.net/assets/*",
+        "https://raw.githubusercontent.com/*"
     ],
     "browser_specific_settings": {
         "gecko": {
