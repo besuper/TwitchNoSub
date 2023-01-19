@@ -1,6 +1,6 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.6.2",
+    "version": "0.6.3",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 2,
     "icons": {
@@ -22,8 +22,7 @@
         "webRequest",
         "webRequestBlocking",
         "https://*.twitch.tv/*",
-        "https://static.twitchcdn.net/assets/*",
-        "https://raw.githubusercontent.com/*"
+        "https://static.twitchcdn.net/assets/*"
     ],
     "browser_specific_settings": {
         "gecko": {

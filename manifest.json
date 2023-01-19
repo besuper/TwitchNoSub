@@ -1,6 +1,6 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.6.2",
+    "version": "0.6.3",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 3,
     "icons": {
@@ -20,7 +20,6 @@
         "service_worker": "src/background.js"
     },
     "host_permissions": [
-        "https://raw.githubusercontent.com/*",
         "https://www.twitch.tv/*",
         "https://static.twitchcdn.net/assets/*"
     ],
