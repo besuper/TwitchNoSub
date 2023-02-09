@@ -1,0 +1,21 @@
+{
+    "name": "twitchnosub",
+    "version": "1.0.0",
+    "description": "An extension to show sub only VOD on Twitch",
+    "scripts": {
+        "patch": "node tools/patch.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/besuper/TwitchNoSub.git"
+    },
+    "author": "besuper",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/besuper/TwitchNoSub/issues"
+    },
+    "homepage": "https://github.com/besuper/TwitchNoSub#readme",
+    "dependencies": {
+        "amazon-ivs-player": "^1.16.0"
+    }
+}
