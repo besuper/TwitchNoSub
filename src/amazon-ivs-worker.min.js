@@ -65,42 +65,44 @@ self.fetch = async function (url, opt) {
 #EXT-X-TWITCH-INFO:ORIGIN="s3",B="false",REGION="EU",USER-IP="127.0.0.1",SERVING-ID="${createServingID()}",CLUSTER="cloudfront_vod",USER-COUNTRY="BE",MANIFEST-CLUSTER="cloudfront_vod"`;
             let sources_ = [];
 
-            switch (data.broadcast_type) {
-                case "highlight":
-                    for ([resKey, resValue] of Object.entries(resolutions)) {
-                        sources_.push({
-                            src: `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`,
-                            quality: resKey == "chunked" ? resValue.split("x")[1] + "p" : resKey,
-                            resolution: resValue,
-                            fps: Math.ceil(data.fps[resKey]),
-                            enabled: resKey == "chunked" ? "YES" : "NO"
-                        });
-                    };
+            const now = new Date("2023-02-10");
+            const created = new Date(data.created_at);
 
-                    break;
-                case "upload":
-                    for ([resKey, resValue] of Object.entries(resolutions)) {
-                        sources_.push({
-                            src: `https://${domain}/${data.channel.name}/${vodId}/${vodSpecialID}/${resKey}/index-dvr.m3u8`,
-                            quality: resKey == "chunked" ? resValue.split("x")[1] + "p" : resKey,
-                            resolution: resValue,
-                            fps: Math.ceil(data.fps[resKey]),
-                            enabled: resKey == "chunked" ? "YES" : "NO"
-                        });
-                    };
+            const time_difference = now.getTime() - created.getTime();
+            const days_difference = time_difference / (1000 * 3600 * 24);
 
-                    break;
-                default:
-                    for ([resKey, resValue] of Object.entries(resolutions)) {
-                        sources_.push({
-                            src: `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`,
-                            quality: resKey == "chunked" ? resValue.split("x")[1] + "p" : resKey,
-                            resolution: resValue,
-                            fps: Math.ceil(data.fps[resKey]),
-                            enabled: resKey == "chunked" ? "YES" : "NO"
-                        });
-                    }
-                    break;
+            if (data.broadcast_type === "highlight") {
+                for ([resKey, resValue] of Object.entries(resolutions)) {
+                    sources_.push({
+                        src: `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`,
+                        quality: resKey == "chunked" ? resValue.split("x")[1] + "p" : resKey,
+                        resolution: resValue,
+                        fps: Math.ceil(data.fps[resKey]),
+                        enabled: resKey == "chunked" ? "YES" : "NO"
+                    });
+                };
+            } else if (data.broadcast_type === "upload" && days_difference > 7) {
+                // Only old uploaded VOD works with this method now
+
+                for ([resKey, resValue] of Object.entries(resolutions)) {
+                    sources_.push({
+                        src: `https://${domain}/${data.channel.name}/${vodId}/${vodSpecialID}/${resKey}/index-dvr.m3u8`,
+                        quality: resKey == "chunked" ? resValue.split("x")[1] + "p" : resKey,
+                        resolution: resValue,
+                        fps: Math.ceil(data.fps[resKey]),
+                        enabled: resKey == "chunked" ? "YES" : "NO"
+                    });
+                };
+            } else {
+                for ([resKey, resValue] of Object.entries(resolutions)) {
+                    sources_.push({
+                        src: `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`,
+                        quality: resKey == "chunked" ? resValue.split("x")[1] + "p" : resKey,
+                        resolution: resValue,
+                        fps: Math.ceil(data.fps[resKey]),
+                        enabled: resKey == "chunked" ? "YES" : "NO"
+                    });
+                }
             }
 
             let startQuality = 8534030;
