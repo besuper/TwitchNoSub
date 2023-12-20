@@ -20,7 +20,7 @@
         "service_worker": "src/background.js"
     },
     "host_permissions": [
-        "https://www.twitch.tv/*",
+        "https://*.twitch.tv/*",
         "https://static.twitchcdn.net/assets/*"
     ],
     "permissions": [
