@@ -8,6 +8,13 @@ chrome.webNavigation.onBeforeNavigate.addListener(function () {
 var isChrome = chrome.declarativeNetRequest != undefined;
 var cdnLink = '';
 
+if (isChrome) {
+    // Fix brave extensions
+    chrome.runtime.onStartup.addListener(() => {
+        chrome.runtime.reload();
+    });
+}
+
 // Patching amazon service worker
 const app = () => {
     if (isChrome) {
