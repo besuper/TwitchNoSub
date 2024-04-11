@@ -31,12 +31,28 @@ const app = () => {
             }],
             removeRuleIds: [1001]
         });
+
+        chrome.declarativeNetRequest.updateDynamicRules({
+            addRules: [{
+                'id': 1002,
+                'priority': 1,
+                'action': {
+                    'type': 'redirect',
+                    'redirect': { url: cdnLink }
+                },
+                'condition': { urlFilter: 'https://assets.twitch.tv/assets/amazon-ivs-wasmworker.min-*.js' }
+            }],
+            removeRuleIds: [1002]
+        });
     } else {
         // Support firefox here
         browser.webRequest.onBeforeRequest.addListener(() => {
             return { redirectUrl: cdnLink };
         }, {
-            urls: ["https://static.twitchcdn.net/assets/amazon-ivs-wasmworker.min-*.js"],
+            urls: [
+                "https://static.twitchcdn.net/assets/amazon-ivs-wasmworker.min-*.js",
+                "https://assets.twitch.tv/assets/amazon-ivs-wasmworker.min-*.js"
+            ],
             types: ["main_frame", "script"]
         }, ["blocking"]);
     }
