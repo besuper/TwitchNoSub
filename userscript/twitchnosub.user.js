@@ -5,8 +5,8 @@
 // @description  Watch sub only VODs on Twitch
 // @author       besuper
 // @match        *://*.twitch.tv/videos/*
-// @updateURL    https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.js
-// @downloadURL  https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.js
+// @updateURL    https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.user.js
+// @downloadURL  https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.user.js
 // @icon         https://raw.githubusercontent.com/besuper/TwitchNoSub/master/assets/icons/icon.png
 // @run-at       document-start
 // @inject-into  page
