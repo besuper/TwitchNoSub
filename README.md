@@ -19,7 +19,7 @@ If you use Chromium (not Chrome), you can pack the extension to get a .crx file 
 
 - Unzip the extension
 - In the parent directory of the extension, run the following command : `chromium --pack-extension=TwitchNoSub`
-- Drop the created crx file in the extensions page of your browser
+- Drop the created crx file in the extensions page of your browser (make sure **Developer mode** is enabled, however it will not work)
 
 ##### Firefox
 Download the latest .**xpi** file in the [releases section](https://github.com/besuper/TwitchNoSub/releases).
