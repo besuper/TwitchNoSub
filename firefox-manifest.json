@@ -38,7 +38,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "twitchnosub@besuper.com",
-            "strict_min_version": "54.0"
+            "strict_min_version": "58.0"
         }
     }
 }
