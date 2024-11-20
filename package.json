@@ -16,6 +16,6 @@
     },
     "homepage": "https://github.com/besuper/TwitchNoSub#readme",
     "dependencies": {
-        "amazon-ivs-player": "1.28.0"
+        "amazon-ivs-player": "1.34.1"
     }
 }
