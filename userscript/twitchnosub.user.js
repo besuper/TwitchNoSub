@@ -8,8 +8,10 @@
 // @downloadURL  https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.user.js
 // @icon         https://raw.githubusercontent.com/besuper/TwitchNoSub/master/assets/icons/icon.png
 // @match        *://*.twitch.tv/*
+// @run-at       document-end
 // @inject-into  page
 // @grant        none
+
 // ==/UserScript==
 (function () {
     'use strict';
