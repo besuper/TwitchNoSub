@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TwitchNoSub
 // @namespace    https://github.com/besuper/TwitchNoSub
-// @version      1.0.5
+// @version      1.0.3
 // @description  Watch sub only VODs on Twitch
 // @author       besuper
 // @updateURL    https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.user.js
