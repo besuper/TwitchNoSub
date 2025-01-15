@@ -17,8 +17,7 @@ window.Worker = class Worker extends oldWorker {
     constructor(twitchBlobUrl) {
         super(twitchBlobUrl);
 
-        if (!isVariantA) {
-            this.addEventListener("message", (event) => {
+        this.addEventListener("message", (event) => {
                 const data = event.data;
 
                 if (data.id == 1 && data.type == 1) {
