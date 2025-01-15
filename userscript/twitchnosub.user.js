@@ -22,7 +22,7 @@
 
     document.head.appendChild = function (element) {
         if (element?.tagName === "SCRIPT") {
-            if (element.src && element.src.includes("player-core-variant-a")) {
+            if (element?.src?.includes("player-core-variant-a")) {
                 isVariantA = true;
             }
         }
