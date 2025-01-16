@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TwitchNoSub
 // @namespace    https://github.com/besuper/TwitchNoSub
-// @version      1.0.3
+// @version      1.0.4
 // @description  Watch sub only VODs on Twitch
 // @author       besuper
 // @updateURL    https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.user.js
@@ -42,14 +42,12 @@
             `]));
             super(blobUrl);
 
-            if (!isVariantA) {
-                this.addEventListener("message", (event) => {
-                    const { data } = event;
-                    if (data.id === 1 && data.type === 1) {
-                        this.postMessage({ ...data, arg: [data.arg] });
-                    }
-                });
-            }
+            this.addEventListener("message", (event) => {
+                const { data } = event;
+                if ((data.id === 1 || isVariantA) && data.type === 1) {
+                    this.postMessage({ ...data, arg: [data.arg] });
+                }
+            });
         }
     }
 })();
