@@ -1,9 +1,10 @@
 var isVariantA = false;
+
 const originalAppendChild = document.head.appendChild;
 
 document.head.appendChild = function (element) {
-    if (element.tagName === "SCRIPT") {
-        if (element.src.includes("player-core-variant-a")) {
+    if (element?.tagName === "SCRIPT") {
+        if (element?.src?.includes("player-core-variant-a")) {
             isVariantA = true;
         }
     }
@@ -17,18 +18,11 @@ window.Worker = class Worker extends oldWorker {
     constructor(twitchBlobUrl) {
         super(twitchBlobUrl);
 
-        if (!isVariantA) {
-            this.addEventListener("message", (event) => {
-                const data = event.data;
-
-                if (data.id == 1 && data.type == 1) {
-                    const newData = event.data;
-
-                    newData.arg = [data.arg];
-
-                    this.postMessage(newData);
-                }
-            });
-        }
+        this.addEventListener("message", (event) => {
+            const { data } = event;
+            if ((data.id === 1 || isVariantA) && data.type === 1) {
+                this.postMessage({ ...data, arg: [data.arg] });
+            }
+        });
     }
 }
