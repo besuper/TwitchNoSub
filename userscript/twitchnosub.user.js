@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TwitchNoSub
 // @namespace    https://github.com/besuper/TwitchNoSub
-// @version      1.0.5
+// @version      1.1.0
 // @description  Watch sub only VODs on Twitch
 // @author       besuper
 // @updateURL    https://raw.githubusercontent.com/besuper/TwitchNoSub/master/userscript/twitchnosub.user.js
@@ -16,57 +16,29 @@
 (function () {
     'use strict';
 
-    var isVariantA = false;
-
-    const originalAppendChild = document.head.appendChild;
-
-    document.head.appendChild = function (element) {
-        if (element?.tagName === "SCRIPT") {
-            if (element?.src?.includes("player-core-variant-a")) {
-                isVariantA = true;
-            }
-        }
-
-        return originalAppendChild.call(this, element);
-    };
+    // From vaft script (https://github.com/pixeltris/TwitchAdSolutions/blob/master/vaft/vaft.user.js#L299)
+    function getWasmWorkerJs(twitchBlobUrl) {
+        var req = new XMLHttpRequest();
+        req.open('GET', twitchBlobUrl, false);
+        req.overrideMimeType("text/javascript");
+        req.send();
+        return req.responseText;
+    }
 
     const oldWorker = window.Worker;
 
     window.Worker = class Worker extends oldWorker {
-        constructor() {
+        constructor(twitchBlobUrl) {
+            var workerString = getWasmWorkerJs(`${twitchBlobUrl.replaceAll("'", "%27")}`);
+            var workerUrl = workerString.replace("importScripts('", "").replace("')", "");
+
             const blobUrl = URL.createObjectURL(new Blob([`
                 importScripts(
                     'https://cdn.jsdelivr.net/gh/besuper/TwitchNoSub/src/patch_amazonworker.js',
-                    'https://cdn.jsdelivr.net/npm/amazon-ivs-player/dist/assets/amazon-ivs-worker.min.js'
+                    '${workerUrl}'
                 );
             `]));
             super(blobUrl);
-
-            console.log("[TNS] Patched worker with variant: " + (isVariantA ? "A" : "B"));
-
-            this.addEventListener("message", (event) => {
-                const { data } = event;
-    
-                if ((data.id === 1 || isVariantA) && data.type === 1) {
-                    try {
-                        this.postMessage({ ...data, arg: [data.arg] });
-                    } catch (e) {
-                        console.error("[TNS] Error when sending postMessage");
-                        console.error(e);
-                        console.error(data);
-    
-                        if ("srcObj" in data.arg) {
-                            // Sometimes data contains MediaSourceHandle that is non-cloneable
-                            // data.arg contains srcObj: MediaSourceHandle {}
-                            console.log("[TNS] MediaSourceHandle found, can't post updated message");
-    
-                            // Can't post here, but only updating data still works fixing undefined mode
-                        }
-
-                        event.data.arg = [data.arg];
-                    }
-                }
-            });
         }
     }
 })();

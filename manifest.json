@@ -1,6 +1,6 @@
 {
     "name": "TwitchNoSub",
-    "version": "0.8.2",
+    "version": "0.9",
     "description": "Show sub only VOD on Twitch",
     "manifest_version": 3,
     "icons": {
@@ -9,7 +9,6 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "src/amazon-ivs-worker.min.js",
                 "src/app.js"
             ],
             "matches": [
@@ -17,9 +16,6 @@
             ]
         }
     ],
-    "background": {
-        "service_worker": "src/background.js"
-    },
     "content_scripts": [
         {
             "matches": [
@@ -36,11 +32,5 @@
         "https://*.twitch.tv/*",
         "https://static.twitchcdn.net/assets/*"
     ],
-    "permissions": [
-        "activeTab",
-        "tabs",
-        "webRequest",
-        "webNavigation",
-        "declarativeNetRequest"
-    ]
+    "permissions": []
 }

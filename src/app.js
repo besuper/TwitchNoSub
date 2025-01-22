@@ -1,47 +1,26 @@
-var isVariantA = false;
-
-const originalAppendChild = document.head.appendChild;
-
-document.head.appendChild = function (element) {
-    if (element?.tagName === "SCRIPT") {
-        if (element?.src?.includes("player-core-variant-a")) {
-            isVariantA = true;
-        }
-    }
-
-    return originalAppendChild.call(this, element);
-};
+// From vaft script (https://github.com/pixeltris/TwitchAdSolutions/blob/master/vaft/vaft.user.js#L299)
+function getWasmWorkerJs(twitchBlobUrl) {
+    var req = new XMLHttpRequest();
+    req.open('GET', twitchBlobUrl, false);
+    req.overrideMimeType("text/javascript");
+    req.send();
+    return req.responseText;
+}
 
 const oldWorker = window.Worker;
 
 window.Worker = class Worker extends oldWorker {
     constructor(twitchBlobUrl) {
-        super(twitchBlobUrl);
+        var workerString = getWasmWorkerJs(`${twitchBlobUrl.replaceAll("'", "%27")}`);
+        var workerUrl = workerString.replace("importScripts('", "").replace("')", "");
 
-        console.log("[TNS] Patched worker with variant: " + (isVariantA ? "A" : "B"));
+        const blobUrl = URL.createObjectURL(new Blob([`
+            importScripts(
+                'https://cdn.jsdelivr.net/gh/besuper/TwitchNoSub/src/patch_amazonworker.js',
+                '${workerUrl}'
+            );
+        `]));
 
-        this.addEventListener("message", (event) => {
-            const { data } = event;
-
-            if ((data.id === 1 || isVariantA) && data.type === 1) {
-                try {
-                    this.postMessage({ ...data, arg: [data.arg] });
-                } catch (e) {
-                    console.error("[TNS] Error when sending postMessage");
-                    console.error(e);
-                    console.error(data);
-
-                    if ("srcObj" in data.arg) {
-                        // Sometimes data contains MediaSourceHandle that is non-cloneable
-                        // data.arg contains srcObj: MediaSourceHandle {}
-                        console.log("[TNS] MediaSourceHandle found, can't post updated message");
-
-                        // Can't post here, but only updating data still works fixing undefined mode
-                    }
-
-                    event.data.arg = [data.arg];
-                }
-            }
-        });
+        super(blobUrl);
     }
 }
