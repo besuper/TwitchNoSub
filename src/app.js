@@ -22,10 +22,8 @@ window.Worker = class Worker extends oldWorker {
 
         this.addEventListener("message", (event) => {
             const { data } = event;
-            if ((data.id === 1 || isVariantA) && data.type === 1) {
-                // Sometimes there is a codec property undefined that cause Error 4000
-                // amazon-ivs-worker.min.js:2 Player stopping playback - error :2 (ErrorNotSupported code 4 - Failed to execute 'addSourceBuffer' on 'MediaSource': The type provided ('video/mp4;undefined') is unsupported.)
 
+            if ((data.id === 1 || isVariantA) && data.type === 1) {
                 try {
                     this.postMessage({ ...data, arg: [data.arg] });
                 } catch (e) {
@@ -33,24 +31,15 @@ window.Worker = class Worker extends oldWorker {
                     console.error(e);
                     console.error(data);
 
-                    let isMediaSource = false;
+                    event.data.arg = [data.arg];
 
-                    for (const element of data.arg) {
-                        if (typeof element === "object" && "srcObj" in element) {
-                            isMediaSource = true;
-                            break;
-                        }
-                    }
-
-                    if (isMediaSource) {
+                    if ("srcObj" in data.arg) {
                         // Sometimes data contains MediaSourceHandle that is non-cloneable
                         // data.arg contains srcObj: MediaSourceHandle {}
-                        console.log("[TNS] MediaSourceHandle found, can't patch the message");
-                        return;
-                    }
+                        console.log("[TNS] MediaSourceHandle found, can't post updated message");
 
-                    // In case of other errors, still try post message
-                    this.postMessage({ ...data, arg: [data.arg] });
+                        // Can't post here, but only updating data still works fixing undefined mode
+                    }
                 }
             }
         });
