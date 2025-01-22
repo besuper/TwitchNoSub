@@ -55,8 +55,6 @@
                         console.error(e);
                         console.error(data);
     
-                        event.data.arg = [data.arg];
-    
                         if ("srcObj" in data.arg) {
                             // Sometimes data contains MediaSourceHandle that is non-cloneable
                             // data.arg contains srcObj: MediaSourceHandle {}
@@ -64,6 +62,8 @@
     
                             // Can't post here, but only updating data still works fixing undefined mode
                         }
+
+                        event.data.arg = [data.arg];
                     }
                 }
             });
