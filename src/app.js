@@ -11,8 +11,8 @@ const oldWorker = window.Worker;
 
 window.Worker = class Worker extends oldWorker {
     constructor(twitchBlobUrl) {
-        var workerString = getWasmWorkerJs(`${twitchBlobUrl.replaceAll("'", "%27")}`);
-        var workerUrl = workerString.replace("importScripts('", "").replace("')", "");
+        var workerString = getWasmWorkerJs(`${twitchBlobUrl.replaceAll("'", "%27")}`);        
+        var workerUrl = workerString.split("importScripts('")[1].replace("');", "").trim();
 
         const blobUrl = URL.createObjectURL(new Blob([`
             importScripts(
@@ -20,7 +20,7 @@ window.Worker = class Worker extends oldWorker {
                 '${workerUrl}'
             );
         `]));
-
+        
         super(blobUrl);
     }
 }
