@@ -12,13 +12,12 @@ const oldWorker = window.Worker;
 window.Worker = class Worker extends oldWorker {
     constructor(twitchBlobUrl) {
         var workerString = getWasmWorkerJs(`${twitchBlobUrl.replaceAll("'", "%27")}`);
-        var workerUrl = workerString.replace("importScripts('", "").replace("')", "");
 
         const blobUrl = URL.createObjectURL(new Blob([`
             importScripts(
                 'https://cdn.jsdelivr.net/gh/besuper/TwitchNoSub/src/patch_amazonworker.js',
-                '${workerUrl}'
             );
+            ${workerString}
         `]));
 
         super(blobUrl);
