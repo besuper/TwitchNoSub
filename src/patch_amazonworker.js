@@ -39,8 +39,9 @@ async function isValidQuality(url) {
 
 const oldFetch = self.fetch;
 
-self.fetch = async function (url, opt) {
-    let response = await oldFetch(url, opt);
+self.fetch = async function (input, opt) {
+    let url = input instanceof Request ? input.url : input.toString();
+    let response = await oldFetch(input, opt);
 
     // Patch playlist from unmuted to muted segments
     if (url.includes("cloudfront") && url.includes(".m3u8")) {
@@ -55,7 +56,7 @@ self.fetch = async function (url, opt) {
             const data = await fetchTwitchDataGQL(vodId);
 
             if (data == undefined) {
-                return new Response("Unable to fetch twitch data API", 403);
+                return new Response("Unable to fetch twitch data API", { status: 403 });
             }
 
             const vodData = data.data.video;
@@ -93,7 +94,7 @@ self.fetch = async function (url, opt) {
 
             let ordered_resolutions = {};
 
-            for (key in sorted_dict) {
+            for (const key in sorted_dict) {
                 ordered_resolutions[sorted_dict[key]] = resolutions[sorted_dict[key]];
             }
 
@@ -118,8 +119,8 @@ self.fetch = async function (url, opt) {
 
             let startQuality = 8534030;
 
-            for ([resKey, resValue] of Object.entries(resolutions)) {
-                var url = undefined;
+            for (const [resKey, resValue] of Object.entries(resolutions)) {
+                url = undefined;
 
                 if (broadcastType === "highlight") {
                     url = `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`;
