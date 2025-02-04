@@ -33,7 +33,7 @@
 
             const blobUrl = URL.createObjectURL(new Blob([`
                 importScripts(
-                    'https://cdn.jsdelivr.net/gh/besuper/TwitchNoSub/src/patch_amazonworker.js',
+                    'https://cdn.jsdelivr.net/gh/besuper/TwitchNoSub@master/src/patch_amazonworker.js',
                 );
                 ${workerString}
             `]));
