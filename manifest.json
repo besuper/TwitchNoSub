@@ -9,7 +9,8 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "src/app.js"
+                "src/app.js",
+                "src/chrome/app.js"
             ],
             "matches": [
                 "https://*.twitch.tv/*"

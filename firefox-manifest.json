@@ -7,7 +7,9 @@
         "128": "assets/icons/icon.png"
     },
     "web_accessible_resources": [
-        "src/app.js"
+        "src/firefox/app.js",
+        "src/app.js",
+        "src/patch_amazonworker.js"
     ],
     "content_scripts": [
         {
@@ -15,6 +17,7 @@
                 "https://*.twitch.tv/*"
             ],
             "js": [
+                "src/firefox/twitchnosub.js",
                 "src/twitchnosub.js"
             ],
             "run_at": "document_start"
