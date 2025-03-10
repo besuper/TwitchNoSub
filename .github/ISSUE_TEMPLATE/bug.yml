@@ -1,0 +1,56 @@
+name: Bug Report
+description: File a bug report.
+title: "Bug: "
+labels: ["bug"]
+assignees:
+  - besuper
+body:
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version are you running?
+      options:
+        - Chromium
+        - Firefox
+    validations:
+      required: true
+  - type: input
+    id: vod
+    attributes:
+      label: VOD link / channel link
+      description: The URL where you encountered the error
+    validations:
+      required: false
+  - type: textarea
+    id: twitch-error
+    attributes:
+      label: Twitch error
+      description: Fill this in if you encountered a Twitch player error.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console log output
+      description: Please copy and paste logs related to TwitchNoSub and Twitch players from the developer console
+      value: You can skip if the issue is not about VODs/lives
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information
+      description: Feel free to provide any additional information you have.
+      placeholder: Additional information, screenshots, ...
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Verification
+      description: By submitting this issue, you agree that you have correctly filled out this form.
+      options:
+        - label: I agree
+          required: true
