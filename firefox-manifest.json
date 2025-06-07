@@ -17,6 +17,7 @@
                 "https://*.twitch.tv/*"
             ],
             "js": [
+                "src/restriction-remover.js",
                 "src/firefox/twitchnosub.js",
                 "src/twitchnosub.js"
             ],

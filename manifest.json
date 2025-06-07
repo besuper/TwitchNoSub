@@ -23,6 +23,7 @@
                 "*://*.twitch.tv/*"
             ],
             "js": [
+                "src/restriction-remover.js",
                 "src/twitchnosub.js"
             ],
             "all_frames": true,
