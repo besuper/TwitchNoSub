@@ -31,35 +31,18 @@ async function isValidQuality(url) {
     if (response.ok) {
         const data = await response.text();
 
-        if (data.includes(".ts")) {
-            // ts files should still use the h264
-            return { codec: "avc1.4D001E" };
-        }
-
-        if (data.includes(".mp4")) {
-            // mp4 file use h265, but sometimes h264
-            const mp4Request = await fetch(url.replace("index-dvr.m3u8", "init-0.mp4"));
-
-            if (mp4Request.ok) {
-                const content = await mp4Request.text();
-
-                return { codec: content.includes("hev1") ? "hev1.1.6.L93.B0" : "avc1.4D001E" };
-            }
-
-            return { codec: "hev1.1.6.L93.B0" };
-        }
+        return data.includes(".ts");
     }
 
-    return null;
+    return false;
 }
 
 const oldFetch = self.fetch;
 
-self.fetch = async function (input, opt) {
-    let url = input instanceof Request ? input.url : input.toString();
-    let response = await oldFetch(input, opt);
+self.fetch = async function (url, opt) {
+    let response = await oldFetch(url, opt);
 
-    // Patch playlist from unmuted to muted segments
+
     if (url.includes("cloudfront") && url.includes(".m3u8")) {
         const body = await response.text();
 
@@ -72,7 +55,7 @@ self.fetch = async function (input, opt) {
             const data = await fetchTwitchDataGQL(vodId);
 
             if (data == undefined) {
-                return new Response("Unable to fetch twitch data API", { status: 403 });
+                return new Response("Unable to fetch twitch data API", 403);
             }
 
             const vodData = data.data.video;
@@ -110,7 +93,7 @@ self.fetch = async function (input, opt) {
 
             let ordered_resolutions = {};
 
-            for (const key in sorted_dict) {
+            for (key in sorted_dict) {
                 ordered_resolutions[sorted_dict[key]] = resolutions[sorted_dict[key]];
             }
 
@@ -135,8 +118,8 @@ self.fetch = async function (input, opt) {
 
             let startQuality = 8534030;
 
-            for (const [resKey, resValue] of Object.entries(resolutions)) {
-                url = undefined;
+            for ([resKey, resValue] of Object.entries(resolutions)) {
+                var url = undefined;
 
                 if (broadcastType === "highlight") {
                     url = `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`;
@@ -152,16 +135,14 @@ self.fetch = async function (input, opt) {
                     continue;
                 }
 
-                const result = await isValidQuality(url);
-
-                if (result) {
+                if (await isValidQuality(url)) {
                     const quality = resKey == "chunked" ? resValue.res.split("x")[1] + "p" : resKey;
                     const enabled = resKey == "chunked" ? "YES" : "NO";
                     const fps = resValue.fps;
 
                     fakePlaylist += `
 #EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="${quality}",NAME="${quality}",AUTOSELECT=${enabled},DEFAULT=${enabled}
-#EXT-X-STREAM-INF:BANDWIDTH=${startQuality},CODECS="${result.codec},mp4a.40.2",RESOLUTION=${resValue.res},VIDEO="${quality}",FRAME-RATE=${fps}
+#EXT-X-STREAM-INF:BANDWIDTH=${startQuality},CODECS="avc1.64002A,mp4a.40.2",RESOLUTION=${resValue.res},VIDEO="${quality}",FRAME-RATE=${fps}
 ${url}`;
 
                     startQuality -= 100;

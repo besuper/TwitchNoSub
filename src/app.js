@@ -1,25 +1,32 @@
-// From vaft script (https://github.com/pixeltris/TwitchAdSolutions/blob/master/vaft/vaft.user.js#L299)
-function getWasmWorkerJs(twitchBlobUrl) {
-    var req = new XMLHttpRequest();
-    req.open('GET', twitchBlobUrl, false);
-    req.overrideMimeType("text/javascript");
-    req.send();
-    return req.responseText;
-}
+var isVariantA = false;
+const originalAppendChild = document.head.appendChild;
+
+document.head.appendChild = function (element) {
+    if (element.tagName === "SCRIPT") {
+        if (element.src.includes("player-core-variant-a")) {
+            isVariantA = true;
+        }
+    }
+
+    return originalAppendChild.call(this, element);
+};
 
 const oldWorker = window.Worker;
 
 window.Worker = class Worker extends oldWorker {
     constructor(twitchBlobUrl) {
-        var workerString = getWasmWorkerJs(`${twitchBlobUrl.replaceAll("'", "%27")}`);
+        super(twitchBlobUrl);
 
-        const blobUrl = URL.createObjectURL(new Blob([`
-            importScripts(
-                '${patch_url}',
-            );
-            ${workerString}
-        `]));
+        this.addEventListener("message", (event) => {
+            const data = event.data;
 
-        super(blobUrl);
+            if ((data.id == 1 || isVariantA) && data.type == 1) {
+                const newData = event.data;
+
+                newData.arg = [data.arg];
+
+                this.postMessage(newData);
+            }
+        });
     }
 }

@@ -9,14 +9,19 @@
     "web_accessible_resources": [
         {
             "resources": [
+                "src/amazon-ivs-worker.min.js",
                 "src/app.js",
-                "src/chrome/app.js"
+                "src/chrome/app.js",
+                "src/download.js"
             ],
             "matches": [
                 "https://*.twitch.tv/*"
             ]
         }
     ],
+    "background": {
+        "service_worker": "src/background.js"
+    },
     "content_scripts": [
         {
             "matches": [
@@ -34,5 +39,11 @@
         "https://*.twitch.tv/*",
         "https://static.twitchcdn.net/assets/*"
     ],
-    "permissions": []
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "webRequest",
+        "webNavigation",
+        "declarativeNetRequest"
+    ]
 }
