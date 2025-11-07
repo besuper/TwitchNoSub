@@ -68,10 +68,13 @@ self.fetch = async function (input, opt) {
 
     if (url.startsWith("https://usher.ttvnw.net/vod/")) {
         if (response.status != 200) {
-            const vodId = url.split("https://usher.ttvnw.net/vod/")[1].split(".m3u8")[0];
+            const splitUsher = url.split(".m3u8")[0].split("/");
+
+            const vodId = splitUsher.at(-1);
+
             const data = await fetchTwitchDataGQL(vodId);
 
-            if (data == undefined) {
+            if (!data || !data?.data.video) {
                 return new Response("Unable to fetch twitch data API", { status: 403 });
             }
 
