@@ -25,8 +25,61 @@ function createServingID() {
     return id;
 }
 
+const defaultResolutions = (() => {
+    const _defaultResolutions = {
+        "160p30": {
+            "name": "160p",
+            "resolution": "284x160",
+            "frameRate": 30
+        },
+        "360p30": {
+            "name": "360p",
+            "resolution": "640x360",
+            "frameRate": 30
+        },
+        "480p30": {
+            "name": "480p",
+            "resolution": "854x480",
+            "frameRate": 30
+        },
+        "720p60": {
+            "name": "720p60",
+            "resolution": "1280x720",
+            "frameRate": 60
+        },
+        "1080p60": {
+            "name": "1080p60",
+            "resolution": "1920x1080",
+            "frameRate": 60
+        },
+        "1440p60": {
+            "name": "1440p60",
+            "resolution": "2560x1440",
+            "frameRate": 60
+        },
+        "chunked": {
+            "name": "chunked",
+            "resolution": "chunked",
+            "frameRate": 60
+        }
+    };
+
+    let sorted_dict = Object.keys(_defaultResolutions);
+    sorted_dict = sorted_dict.reverse();
+
+    let ordered_resolutions = {};
+
+    for (const key in sorted_dict) {
+        ordered_resolutions[sorted_dict[key]] = _defaultResolutions[sorted_dict[key]];
+    }
+
+    return ordered_resolutions;
+})();
+
 async function isValidQuality(url) {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        cache: "force-cache"
+    });
 
     if (response.ok) {
         const data = await response.text();
@@ -38,7 +91,7 @@ async function isValidQuality(url) {
 
         if (data.includes(".mp4")) {
             // mp4 file use h265, but sometimes h264
-            const mp4Request = await fetch(url.replace("index-dvr.m3u8", "init-0.mp4"));
+            const mp4Request = await fetch(url.replace("index-dvr.m3u8", "init-0.mp4"), { cache: "force-cache" });
 
             if (mp4Request.ok) {
                 const content = await mp4Request.text();
@@ -68,6 +121,10 @@ self.fetch = async function (input, opt) {
 
     if (url.startsWith("https://usher.ttvnw.net/vod/")) {
         if (response.status != 200) {
+            const isUsherV2 = url.includes("/vod/v2");
+
+            console.log(`[TNS] Detected usher ${isUsherV2 ? 'v2' : 'v1'}`);
+
             const splitUsher = url.split(".m3u8")[0].split("/");
 
             const vodId = splitUsher.at(-1);
@@ -75,49 +132,14 @@ self.fetch = async function (input, opt) {
             const data = await fetchTwitchDataGQL(vodId);
 
             if (!data || !data?.data.video) {
+                console.log("[TNS] Unable to fetch twitch data API");
                 return new Response("Unable to fetch twitch data API", { status: 403 });
             }
 
+            console.log(`[TNS] Found data for VOD ${vodId}`);
+
             const vodData = data.data.video;
-            const channelData = vodData.owner
-
-            let resolutions = {
-                "160p30": {
-                    "res": "284x160",
-                    "fps": 30
-                },
-                "360p30": {
-                    "res": "640x360",
-                    "fps": 30
-                },
-                "480p30": {
-                    "res": "854x480",
-                    "fps": 30
-                },
-                "720p60": {
-                    "res": "1280x720",
-                    "fps": 60
-                },
-                "1080p60": {
-                    "res": "1920x1080",
-                    "fps": 60
-                },
-                "chunked": {
-                    "res": "1920x1080",
-                    "fps": 60
-                }
-            };
-
-            let sorted_dict = Object.keys(resolutions);
-            sorted_dict = sorted_dict.reverse();
-
-            let ordered_resolutions = {};
-
-            for (const key in sorted_dict) {
-                ordered_resolutions[sorted_dict[key]] = resolutions[sorted_dict[key]];
-            }
-
-            resolutions = ordered_resolutions;
+            const channelData = vodData.owner;
 
             const currentURL = new URL(vodData.seekPreviewsURL);
 
@@ -138,38 +160,44 @@ self.fetch = async function (input, opt) {
 
             let startQuality = 8534030;
 
-            for (const [resKey, resValue] of Object.entries(resolutions)) {
-                url = undefined;
+            for (const [resKey, resValue] of Object.entries(defaultResolutions)) {
+                let playlistUrl = undefined;
 
                 if (broadcastType === "highlight") {
-                    url = `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`;
+                    playlistUrl = `https://${domain}/${vodSpecialID}/${resKey}/highlight-${vodId}.m3u8`;
                 } else if (broadcastType === "upload" && days_difference > 7) {
                     // Only old uploaded VOD works with this method now
 
-                    url = `https://${domain}/${channelData.login}/${vodId}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
+                    playlistUrl = `https://${domain}/${channelData.login}/${vodId}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
                 } else {
-                    url = `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
+                    playlistUrl = `https://${domain}/${vodSpecialID}/${resKey}/index-dvr.m3u8`;
                 }
 
-                if (url == undefined) {
-                    continue;
-                }
+                if (!playlistUrl) continue;
 
-                const result = await isValidQuality(url);
+                const result = await isValidQuality(playlistUrl);
 
                 if (result) {
-                    const quality = resKey == "chunked" ? resValue.res.split("x")[1] + "p" : resKey;
-                    const enabled = resKey == "chunked" ? "YES" : "NO";
-                    const fps = resValue.fps;
+                    console.log(`[TNS] Found quality ${resKey}`);
 
-                    fakePlaylist += `
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="${quality}",NAME="${quality}",AUTOSELECT=${enabled},DEFAULT=${enabled}
-#EXT-X-STREAM-INF:BANDWIDTH=${startQuality},CODECS="${result.codec},mp4a.40.2",RESOLUTION=${resValue.res},VIDEO="${quality}",FRAME-RATE=${fps}
-${url}`;
+                    if (isUsherV2) {
+                        const variantSource = resKey == "chunked" ? "source" : "transcode";
+
+                        fakePlaylist += `
+#EXT-X-STREAM-INF:BANDWIDTH=${startQuality},CODECS="${result.codec},mp4a.40.2",RESOLUTION=${resValue.resolution},FRAME-RATE=${resValue.frameRate},STABLE-VARIANT-ID="${resKey}",IVS-NAME="${resValue.name}",IVS-VARIANT-SOURCE="${variantSource}"
+${playlistUrl}`;
+                    } else {
+                        const enabled = resKey == "chunked" ? "YES" : "NO";
+
+                        fakePlaylist += `
+#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="${resKey}",NAME="${resKey}",AUTOSELECT=${enabled},DEFAULT=${enabled}
+#EXT-X-STREAM-INF:BANDWIDTH=${startQuality},CODECS="${result.codec},mp4a.40.2",RESOLUTION=${resValue.resolution},VIDEO="${resValue.name}",FRAME-RATE=${resValue.frameRate}
+${playlistUrl}`;
+                    }
 
                     startQuality -= 100;
                 }
-            };
+            }
 
             const header = new Headers();
             header.append('Content-Type', 'application/vnd.apple.mpegurl');
