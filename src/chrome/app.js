@@ -1,1 +1,1 @@
-const patch_url = "https://cdn.jsdelivr.net/gh/besuper/TwitchNoSub@master/src/patch_amazonworker.js";
+const patch_url = localStorage.getItem("tns_internal_patch_url");
