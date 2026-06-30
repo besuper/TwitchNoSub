@@ -7,7 +7,6 @@
         "128": "assets/icons/icon.png"
     },
     "web_accessible_resources": [
-        "src/firefox/app.js",
         "src/app.js",
         "src/patch_amazonworker.js"
     ],
@@ -18,7 +17,6 @@
             ],
             "js": [
                 "src/restriction-remover.js",
-                "src/firefox/twitchnosub.js",
                 "src/twitchnosub.js"
             ],
             "run_at": "document_start",
