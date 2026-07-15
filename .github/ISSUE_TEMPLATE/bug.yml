@@ -6,22 +6,54 @@ assignees:
   - besuper
 body:
   - type: dropdown
-    id: version
+    id: browser-family
     attributes:
-      label: Version
-      description: What version are you running?
+      label: Browser family
+      description: Which supported browser family reproduces the problem?
       options:
         - Chromium
         - Firefox
     validations:
       required: true
   - type: input
+    id: versions
+    attributes:
+      label: Exact versions
+      description: Provide the TwitchNoSub release and full browser version shown by the browser.
+      placeholder: "TwitchNoSub 0.9.3; Firefox 140.0.4"
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - GitHub Release — Chromium ZIP loaded unpacked
+        - GitHub Release — Firefox XPI
+        - Repository checkout loaded unpacked
+        - Userscript
+        - Third-party extension store listing
+    validations:
+      required: true
+  - type: input
     id: vod
     attributes:
       label: VOD link / channel link
-      description: The URL where you encountered the error
+      description: Provide an exact, currently available Twitch URL that reproduces the error.
     validations:
-      required: false
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps and actual result
+      description: List the steps from a fresh Twitch tab, the expected result, and what happened instead.
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        Expected: ...
+        Actual: ...
+    validations:
+      required: true
   - type: textarea
     id: twitch-error
     attributes:
@@ -33,9 +65,17 @@ body:
     id: logs
     attributes:
       label: Console log output
-      description: Please copy and paste logs related to TwitchNoSub and Twitch players from the developer console
-      value: You can skip if the issue is not about VODs/lives
+      description: Copy the first relevant exception and all nearby lines prefixed with [TNS]. Do not paste the entire Twitch console.
+      placeholder: "[TNS] ..."
       render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: extensions
+    attributes:
+      label: Other Twitch/player extensions
+      description: List ad blockers, AdGuard Extra, privacy tools, Twitch userscripts, FFZ/BTTV, and other player modifiers. Enter "None" after testing a clean profile if none are enabled.
+      placeholder: "AdGuard Extra 1.x, FrankerFaceZ 4.x"
     validations:
       required: true
   - type: textarea
