@@ -1,32 +1,59 @@
 # TwitchNoSub
 
-Be able to watch any sub-only vod on Twitch, integrated in the website and support every twitch features.
+TwitchNoSub plays some subscriber-only Twitch VODs when their files are still available on Twitch's CDN.
 
-Support chromium based browser (Chrome, Edge, Brave, Opera, ...) and Firefox.
+## Install
 
-## Download & installation
+### Chrome, Edge, Brave, and other Chromium browsers
 
-##### Chromium based browser
-Download the latest release in the [releases section](https://github.com/besuper/TwitchNoSub/releases) or clone the repo.
+1. Download the Chromium archive from the [latest release](https://github.com/besuper/TwitchNoSub/releases/latest).
+2. Extract it to a permanent folder.
+3. Open your browser's extensions page and enable developer mode.
+4. Choose **Load unpacked** and select the extracted folder.
+5. Reload Twitch.
 
-You have to install the extension manually:
+Chrome 111 or newer is required.
 
-- Go in manage extension (**chrome://extensions/** in chrome)
-- Make sure **Developer mode** is enabled
-- Hit **Load unpacked extension** and select the unzipped folder of the extension.
+### Firefox
 
-If you use Chromium (not Chrome), you can pack the extension to get a .crx file you can drag & drop inside extensions page (which removes the need to have a dedicated directory for the extension on your hard drive)
+Download the signed XPI from the [latest release](https://github.com/besuper/TwitchNoSub/releases/latest), open it with Firefox, and reload Twitch.
 
-- Unzip the extension
-- In the parent directory of the extension, run the following command : `chromium --pack-extension=TwitchNoSub`
-- Drop the created crx file in the extensions page of your browser (make sure **Developer mode** is enabled, however it will not work)
+Firefox 140 or newer is required. The `-unsigned.xpi` built locally is only for testing or AMO submission.
 
-##### Firefox
-Download the latest .**xpi** file in the [releases section](https://github.com/besuper/TwitchNoSub/releases).
+### Userscript
 
-- Drag and drop the xpi file on Firefox
-- Click on "Add" in the little confirmation popup
+Install [the userscript](https://github.com/besuper/TwitchNoSub/raw/master/userscript/twitchnosub.user.js) with Tampermonkey or Violentmonkey.
 
-## Warning
+The userscript loads its worker patch from jsDelivr. The browser extensions use a local copy.
 
-This extension is still in work in progress, if there is any issue please report it.
+## How it works
+
+The extension hooks the worker used by Twitch's player. When Twitch rejects a subscriber-only VOD playlist, TwitchNoSub reads the VOD's public metadata, checks which qualities are still available on Twitch's CDN, and builds a playlist for Twitch's normal player.
+
+It does not decrypt media or provide subscriber credentials.
+
+## Limits
+
+- The VOD and at least one quality must still be available on Twitch's CDN.
+- Deleted, expired, geo-blocked, or otherwise protected VODs may not work.
+- Subscriber-only live streams, clips, Stream Rewind, Kick, and other platforms are not supported.
+- Twitch player, API, or CDN changes can break the extension.
+- Other extensions that modify Twitch's player can conflict with TwitchNoSub.
+
+## Troubleshooting
+
+- Use the latest GitHub release, not a third-party store listing.
+- Reload the extension, then reload the Twitch tab.
+- Test with other Twitch extensions and userscripts disabled.
+- When reporting a bug, include the VOD URL, browser version, TwitchNoSub version, player error, and the first relevant `[TNS]` console message.
+
+## Development
+
+The project uses Node.js and has no runtime dependencies.
+
+```sh
+npm test
+npm run package
+```
+
+`npm test` runs the test suite. `npm run package` creates the Chromium and Firefox archives in `dist/`.

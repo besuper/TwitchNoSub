@@ -1,1 +1,0 @@
-localStorage.setItem("tns_internal_patch_url", chrome.runtime.getURL("src/patch_amazonworker.js"));
