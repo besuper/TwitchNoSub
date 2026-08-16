@@ -5,9 +5,6 @@ function injectScript(src) {
     (document.head || document.documentElement).append(s);
 }
 
-const extensionType = window.chrome !== undefined ? "chrome" : "firefox";
+localStorage.setItem("tns_internal_patch_url", chrome.runtime.getURL("src/patch_amazonworker.js"));
 
-console.log("[TNS] Found extension type : " + extensionType);
-
-injectScript(`src/${extensionType}/app.js`);
 injectScript("src/app.js");

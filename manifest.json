@@ -10,7 +10,7 @@
         {
             "resources": [
                 "src/app.js",
-                "src/chrome/app.js"
+                "src/patch_amazonworker.js"
             ],
             "matches": [
                 "https://*.twitch.tv/*"

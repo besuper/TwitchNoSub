@@ -1,3 +1,5 @@
+const patch_url = localStorage.getItem("tns_internal_patch_url");
+
 // From vaft script (https://github.com/pixeltris/TwitchAdSolutions/blob/master/vaft/vaft.user.js#L299)
 function getWasmWorkerJs(twitchBlobUrl) {
     var req = new XMLHttpRequest();

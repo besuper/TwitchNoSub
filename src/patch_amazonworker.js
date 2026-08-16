@@ -120,6 +120,8 @@ self.fetch = async function (input, opt) {
     }
 
     if (url.startsWith("https://usher.ttvnw.net/vod/")) {
+        console.log(`[TNS] Usher request intercepted (status ${response.status}): ${url}`);
+
         if (response.status != 200) {
             const isUsherV2 = url.includes("/vod/v2");
 
@@ -131,8 +133,8 @@ self.fetch = async function (input, opt) {
 
             const data = await fetchTwitchDataGQL(vodId);
 
-            if (!data || !data?.data.video) {
-                console.log("[TNS] Unable to fetch twitch data API");
+            if (!data || !data?.data?.video) {
+                console.log("[TNS] Unable to fetch twitch data API", data);
                 return new Response("Unable to fetch twitch data API", { status: 403 });
             }
 
@@ -141,11 +143,20 @@ self.fetch = async function (input, opt) {
             const vodData = data.data.video;
             const channelData = vodData.owner;
 
+            // Twitch sometimes returns a null seekPreviewsURL (e.g. storyboards disabled),
+            // which previously crashed the whole patch. Log clearly so the failure is diagnosable.
+            if (!vodData.seekPreviewsURL) {
+                console.log("[TNS] seekPreviewsURL is missing, cannot build playlist", vodData);
+                return new Response("Missing seekPreviewsURL", { status: 403 });
+            }
+
             const currentURL = new URL(vodData.seekPreviewsURL);
 
             const domain = currentURL.host;
             const paths = currentURL.pathname.split("/");
             const vodSpecialID = paths[paths.findIndex(element => element.includes("storyboards")) - 1];
+
+            console.log(`[TNS] Channel: ${channelData?.login}, broadcastType: ${vodData.broadcastType}, domain: ${domain}, vodSpecialID: ${vodSpecialID}`);
 
             let fakePlaylist = `#EXTM3U
 #EXT-X-TWITCH-INFO:ORIGIN="s3",B="false",REGION="EU",USER-IP="127.0.0.1",SERVING-ID="${createServingID()}",CLUSTER="cloudfront_vod",USER-COUNTRY="BE",MANIFEST-CLUSTER="cloudfront_vod"`;
@@ -199,8 +210,15 @@ ${playlistUrl}`;
                 }
             }
 
+            if (!fakePlaylist.includes("#EXT-X-STREAM-INF")) {
+                console.log("[TNS] No valid quality found, the VOD CDN structure may have changed", { domain, vodSpecialID, broadcastType, login: channelData?.login });
+                return new Response("No valid quality found", { status: 403 });
+            }
+
             const header = new Headers();
             header.append('Content-Type', 'application/vnd.apple.mpegurl');
+
+            console.log("[TNS] Serving generated playlist");
 
             return new Response(fakePlaylist, { status: 200, headers: header });
         }
